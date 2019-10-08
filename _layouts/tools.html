@@ -1,0 +1,75 @@
+---
+layout: compress
+---
+<!DOCTYPE html>
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if (IE 7)&!(IEMobile)]><html class="no-js lt-ie9 lt-ie8"><![endif]-->
+<!--[if (IE 8)&!(IEMobile)]><html class="no-js lt-ie9"><![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"><!--<![endif]-->
+<head>
+    {% include head.html %}
+</head>
+<body>
+        {% include github-corner.html %}
+    {% include nav.html %}
+    <!-- Header -->
+    <header class="header" role="banner">
+        <div class="wrapper animated fadeIn">
+            <div class="content">
+                <div class="post-title">
+                    <h1>前端工具</h1>
+                    <a class="btn zoombtn" href="{{site.url}}">
+                        <i class="fa fa-home"></i>
+                    </a>
+                </div>
+                <div class="post-list">
+                    <ul>
+                        <li class="wow fadeInLeft" data-wow-duration="1.5s">
+                            <a class="zoombtn" href="https://github.com/zkat/npx">npx</a>
+                            <p>npx 想要解决的主要问题，就是调用项目内部安装的模块。可用来指定当前运行node环境</p>
+                            <a href="https://github.com/zkat/npx" class="btn zoombtn" >Github</a>
+                            <a href="http://www.ruanyifeng.com/blog/2019/02/npx.html" class="btn zoombtn">阮一峰博客</a>
+                        </li>
+                    </ul>
+                    <ul>
+                        <li class="wow fadeInLeft" data-wow-duration="1.5s">
+                            <a class="zoombtn" href="https://github.com/Kenshin/gnvm">gnvm</a>
+                            <p>GNVM 是一个简单的 Windows 下 Node.js 多版本管理器，类似的 nvm nvmw nodist</p>
+                            <a href="https://github.com/Kenshin/gnvm" class="btn zoombtn" >Github</a>
+                        </li>
+                    </ul>
+                    <ul>
+                        <li class="wow fadeInLeft" data-wow-duration="1.5s">
+                            <a class="zoombtn" href="https://github.com/verdaccio/verdaccio">verdaccio</a>
+                            <p>Verdaccio是一个简单的，零配置所需的本地私有npm注册表。不需要整个数据库就可以开始使用！</p>
+                            <a href="https://github.com/verdaccio/verdaccio" class="btn zoombtn">Github</a>
+                        </li>
+                    </ul>
+                    <ul>
+                        <li class="wow fadeInLeft" data-wow-duration="1.5s">
+                            <a class="zoombtn" href="https://github.com/Pana/nrm">nrm</a>
+                            <p>nrm快速切换各种镜像</p>
+                            <a href="https://github.com/Pana/nrm" class="btn zoombtn">Github</a>
+                        </li>
+                    </ul>
+                    <!--额外添加的导航-->
+                     {% for post in site.posts %} 
+                        {% if post.tools %}
+                    <ul>
+                        <li class="wow fadeInLeft" data-wow-duration="1.5s">
+                            <a class="zoombtn" href="{{ site.url }}{{ post.url }}">{{ post.title }}</a>
+                            <p>{{ post.excerpt }}</p>
+                            <a href="{{ site.url }}{{ post.url }}" class="btn zoombtn">Read More</a>
+                        </li>
+                    </ul>
+                      {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </header>
+    {% include scripts.html %}
+    <script src="{{ site.url }}/assets/js/wow.min.js"></script>
+    <script type="text/javascript">(new WOW).init();</script>
+</body>
+</html>

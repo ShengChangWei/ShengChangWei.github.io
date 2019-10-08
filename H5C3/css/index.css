@@ -1,0 +1,523 @@
+
+.qbh-down{
+  position: fixed;
+  bottom: 100px;
+  right: 200px;
+  z-index: 999;
+  opacity: 1;
+  animation: movedown 2s ease-in-out infinite;
+}
+
+/*动画*/
+@keyframes movedown {
+  0%{
+    bottom: 145px;
+  }
+  50%{
+    bottom: 100px;
+  }
+  100%{
+    bottom:145px;
+  }
+}
+
+
+/*第一页样式*/
+.qbh-title{
+  height: 100%;
+  background: url('../image/qbh-title-bg.png') no-repeat center center;
+}
+.qbh-container{
+  height: 100%;
+  width: 1200px;
+  margin: 0 auto;
+  background: rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.qbh-title-name{
+  position: absolute;
+  top: 130px;
+  right: 200px;
+  animation: moveName 3s linear infinite;
+}
+
+@keyframes moveName {
+  0%{
+    top: 90px;
+  }
+  50%{
+    top:130px;
+  }
+  100%{
+    top:90px;
+  }
+}
+
+
+.qbh-title-sofe{
+  position: absolute;
+  top: 200px;
+  left: 386px;
+  animation: moveSofe 2s linear infinite;
+}
+@keyframes moveSofe {
+  0%{
+    top: 180px;
+  }
+  50%{
+    top:200px;
+  }
+  100%{
+    top:180px;
+  }
+}
+/**/
+.qbh-title-extra{
+  position: absolute;
+  bottom: 200px;
+  right: 50%;
+  /*这点注意一下*/
+  transform:translateX(50%);
+}
+
+/*第二屏*/
+.qbh-list{
+  background: url('../image/qbh-list-bg.png') no-repeat center bottom;
+}
+.qbh-list-word{
+  position: absolute;
+  bottom: 537px;
+  right: 50%;
+  margin-right: -180px;
+  width: 360px;
+  height: 28px;
+  overflow: hidden;
+}
+.qbh-list-word img:first-child{
+  position: absolute;
+  top: 0;
+}
+.qbh-list-word img:last-child{
+  opacity: 0;
+  position: absolute;
+}
+.qbh-list-search{
+  position: absolute;
+  bottom: 312px;
+  right: 0;
+  width: 222px;
+  height: 46px;
+  opacity: 0;
+}
+.qbh-list-search img:last-child{
+  position: absolute;
+  right: 30px;
+  bottom: 11px;
+  z-index: 10;
+  opacity: 0;
+
+}
+
+.qhb-list-sofe{
+  position: absolute;
+  width: 0px;
+  bottom: 210px;
+  right: 50%;
+  margin-right: -221px;
+  display: none;
+}
+
+.qbh-list-search-finish{
+  position: absolute;
+  bottom: 312px;
+  right: 50%;
+  margin-right: -111px;
+  width: 222px;
+  /*opacity: 0;*/
+  display: none;
+}
+
+/*第二屏*/
+
+.qbh-buy-main{
+  width: 990px;
+  height: 600px;
+  position: absolute;
+  bottom:0;
+  right: 50%;
+  margin-right: calc(-990px/2);
+}
+.qbh-buy-main-choose{
+  position: absolute;
+  bottom: 0;
+  right: 160px;
+  width: 296px;
+  height: 300px;
+  overflow: hidden;
+}
+.qbh-buy-main-choose-true,.qbh-buy-main-choose-false {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.qbh-buy-main-choose-true img:last-child,.qbh-buy-main-choose-false img:last-child {
+  margin-top: 20px;
+}
+/*掉下去的沙发*/
+.qbh-list-drop{
+  display: none;
+  position: absolute;
+  bottom: 342px;
+  right: 605px;
+  width: 100px;
+  z-index: 3;
+}
+/*掉下去的沙发*/
+.qbh-info-rotate-sofa{
+  position: absolute;
+  bottom: 213px;
+  right: 637px;
+  display: none;
+  z-index: 10;
+}
+
+
+
+/*第四屏*/
+.qbh-info{
+  background: url('../image/qbh-info-bg.png') no-repeat center bottom;
+}
+
+.qbh-info-cloud{
+  position: absolute;
+  top: 40px;
+  right: 0;
+  animation:moveCloud 30s linear infinite;
+}
+
+@keyframes moveCloud {
+  0%{
+    right: -500px;
+  }
+  50%{
+    right: 500px;
+  }
+  100%{
+    right: -500px;
+  }
+}
+.qbh-info-word{
+  position: absolute;
+  width: 430px;
+  height: 32px;
+  bottom: 502px;
+  right: 50%;
+  margin-right: -215px;
+}
+.qbh-info-word img:last-child{
+  position: absolute;
+  opacity: 0;
+  top: 0;
+}
+
+.qbh-info-address-box{
+  display: none;
+  
+  
+  position: absolute;
+  width: 284px;
+  height: 270px;
+  bottom: 205px;
+  right: 50%;
+  margin-right: -142px;
+}
+.qbh-info-address-box img:last-child{
+  position: absolute;
+  width: 174px;
+  top: 59px;
+  right: -32px;
+  margin-right:87px;
+}
+.qbh-info-cart{
+  position: absolute;
+  width: 408px;
+  height: 346px;
+  bottom: 0;
+  right: 50%;
+  margin-right: -204px;
+}
+.qbh-info-cart img:last-child{
+  position: absolute;
+  top: -40px;
+  right: 60px;
+  display: none;
+
+}
+
+.qbh-info-cart img:first-child{
+  position: absolute;
+  z-index: 11;
+}
+
+
+/*第五屏*/
+.qbh-payment{
+  background: url('../image/qbh-payment-bg.png') no-repeat center bottom;
+} 
+.qbh-payment-font{
+  position: absolute;
+  top: 8px;
+  left: 134px;
+  z-index: 2;
+}
+.qbh-payment-drop{
+  position: absolute;
+  bottom: 582px;
+  left: 232px;
+  display: none;
+}
+.qbh-payment-bill{
+  position: absolute;
+  bottom: 184px;
+  left: 152px;
+  width: 358px;
+  height: 221px;
+}
+
+.qbh-payment-bill img:first-child{
+  position: absolute;
+  top: 47px;
+  left: 75px
+}
+.qbh-payment-bill img:nth-child(2){
+  position: relative;
+  z-index: 3;
+}
+.qbh-payment-bill img:last-child{
+  position: absolute;
+  top: 28px;
+  left: 37px;
+}
+.qbh-payment-mouse{
+  position: absolute;
+  bottom: 210px;
+  right: 241px;
+  width: 205px;
+  height: 819px;
+  overflow: hidden;
+}
+.qbh-payment-mouse img:last-child{
+  position: absolute;
+  top: 0;
+  display: none;
+}
+.qbh-payment-hands{
+  position: absolute;
+  bottom: -100px;
+  right: 299px;
+}
+/*掉落的沙发*/
+.qbh-payment-drop2{
+  position: absolute;
+  right: 807px;
+  bottom: 43px;
+  z-index: 12;
+  display: none;
+}
+/*第六屏*/
+.qbh-delivery{
+  /*注意：背景图位置是25% 移动特效改变的是背景图*/
+  background: url(../image/qbh-delivery-bg.png) no-repeat 25% bottom;
+}
+
+.qbh-delivery-cloud-one{
+  position: absolute;
+  right: 60px;
+  top: 80px;
+  animation: moveCloud2  60s infinite ;
+}
+.qbh-delivery-cloud-two{
+  position: absolute;
+  top: 70px;
+  right: 400px;
+  animation: moveCloud2  60s infinite
+}
+/*设置云彩动画*/
+@keyframes moveCloud2{
+  0%{
+    right: 600px;
+
+  }
+  50%{
+    right: 0;
+  }
+  100%{
+    right: 600px;
+  }
+
+}
+
+/*广告语*/
+.qbh-delivery-word{
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}
+/*快递箱*/
+.qbh-delivery-box{
+  position: absolute;
+  left: 0;
+  bottom: 315px;
+  width: 0;
+}
+.qbh-delivery-running{
+  position: absolute;
+  bottom: 0;
+  right: 260px;
+}
+/*广告语*/
+.qbh-delivery-word{
+  position: absolute;
+  width: 308px;
+  height: 59px;
+  right:50%;
+  bottom: 526px;
+  margin-right: -100px;
+  display: none;
+}
+.qbh-delivery-word img:last-child{
+  position: absolute;
+  bottom: 0;
+}
+/*货车*/
+.qbh-delivery-truck{
+  position: absolute;
+  bottom:0;
+  right: 380px;
+
+}
+.qbh-delivery-truck-font{
+  position: absolute;
+  bottom: 120px;
+  right: 347px;
+  display: none;
+
+}
+.qbh-delivery-deliveryman{
+  position: absolute;
+  bottom: 28px;
+  right: 396px;
+  width: 0px;
+}
+
+.qbh-delivery-door{
+  position: absolute;
+  right: 117px;
+  bottom: 117px;
+  display: none;
+}
+.qbh-delivery-buyer{
+  position: absolute;
+  right: 230px;
+  bottom: 110px;
+  width: 0;
+}
+.qhb-delivery-message{
+  position: absolute;
+  bottom: 376px;
+  right: 310px;
+  opacity: 0;
+}
+
+/*第七屏*/
+/* === 第七屏 === */
+.qbh-appraise {
+  background-image: url("../image/qbh-appraise-bg.png");
+  background-repeat: no-repeat;
+  background-position: center bottom;
+}
+
+.qbh-appraise-main {
+  position: absolute;
+  bottom: 350px;
+  right: 739px;
+  width: 205px;
+  height: 134px;
+}
+
+.qbh-appraise-main-star {
+  position: absolute;
+  top: 26px;
+  left: 51px;
+  width: 0;
+  height: 15px;
+  overflow: hidden;
+
+}
+.star{
+  animation:movestar 2.5s steps(5) forwards;
+}
+/*设置星星动画*/
+@keyframes movestar {
+  from{
+    width:0;
+  }
+  to{
+    width:99px;
+  }
+}
+
+
+.qbh-appraise-main-star img {
+  margin-right: 2px;
+}
+
+.qbh-appraise-haoping {
+  display: none;
+  position: absolute;
+  top: 60px;
+  left: 260px;
+  width: 1px;
+  height: 40px;
+}
+
+/* === 第八屏 === */
+.qbh-shopping {
+  position: relative;
+  background-image: url("../image/qbh-shopping-bg.png");
+}
+
+.qbh-shopping-main {
+  position: absolute;
+  right: 50%;
+  margin-right: -195px;
+  bottom:300px;
+  width: 390px;
+  height: 156px;
+}
+
+.qbh-shopping-main-btn img {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.qbh-shopping-main-btn img:last-child {
+  display: none;
+}
+
+.qbh-shopping-main:hover .qbh-shopping-main-btn img:last-child  {
+  display: block;
+}
+
+.qbh-shopping-main-again {
+  position: absolute;
+  top: 70px;
+  left: 430px;
+}
+
+.qbh-shopping-hands {
+  position: absolute;
+}

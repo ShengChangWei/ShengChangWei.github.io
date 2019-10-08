@@ -1,0 +1,68 @@
+---
+layout: compress
+---
+<!DOCTYPE html>
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if (IE 7)&!(IEMobile)]><html class="no-js lt-ie9 lt-ie8"><![endif]-->
+<!--[if (IE 8)&!(IEMobile)]><html class="no-js lt-ie9"><![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"><!--<![endif]-->
+<head>
+    {% include head.html %}
+  <!-- 百度统计代码 -->
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?fb319b6748ac6eb5a4e2ddf874ee5113";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+    </script>
+</head>
+<body>
+    {% include github-corner.html %}
+    {% include canvas.html %}
+    {% include nav.html %}
+    <!-- Header -->
+    <style>
+     header {
+        position: absolute;
+        top: 11px;
+        }
+    </style>
+    <header class="header flex" role="banner" style="position: absolute;top: -13px;">
+        <div class="container animated fadeIn" style="background: none; box-shadow: none;">
+            <div class="row">
+                    <a href="{{ site.url }}">
+                        <img src="{{ site.logo }}" class="img-circle zoombtn animated rotateIn">
+                    </a>
+                    <h3 class="title">
+                        <a class="zoombtn" href="{{ site.url }}">
+                        	<p style="font-size:1.2rem;font-weight:900; color: #fff;">{{ site.title }}</p>
+			            </a>
+                    </h3>
+                    <hr class="hr-line">
+                    <h3 class="title">
+                        <a href="{{ site.url }}">
+                        	<p style="font-size:1rem;font-weight:900">{{ site.bio }}</p>
+			            </a>
+                    </h3>
+                    {% include social-links.html %}
+                  <hr class="hr-line">
+                  <h3 class="title">
+                         <a class="btn zoombtn" href="{{ site.url }}/about">
+                         个人简介
+                         </a>
+                         <a class="btn zoombtn" href="{{ site.url }}/posts">
+                         文章
+                         </a>
+                         <a class="btn zoombtn" href="{{ site.url }}/projects">
+                         随记
+                         </a>
+                 </h3>
+            </div>
+        </div>
+    </header>
+    {% include scripts.html %}
+</body>
+</html>

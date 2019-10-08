@@ -1,0 +1,1699 @@
+var VideoControl = Class.create();
+VideoControl._temp = {
+  initialize : function(options) {
+    this.options = {
+      elm : $('h3c_IMOS_ActiveX'),
+      frameControlIdList  : [],
+      posPresetSelectorId : 'posPresetSelector',
+      selectedFrameIndex : -1,
+      multiSelectedFrameIndex : [],
+      cachedLunxunFrameIds : [],
+      cameraIds : {},
+      cameraTypes: {},
+      keywords: {},
+      mapCamCodeToId : {},
+      playSpeeds : {},
+      playStatus : {},
+      availablePlaySpeedList : [ '-16x', '-8x', '-4x', '-2x', '-1x', '-1/2x',
+          '-1/4x', '1/4x', '1/2x', '1x', '2x', '4x', '8x', '16x' ],
+      totalWidth : 710,
+      frameWidth : 350,
+      frameHeight : 260,
+      mapCmdToPtzCmd : {
+    	  0x0402	:	{'cmd' : 3, 'forStart' : true},		// start up
+    	  0x0401	:	{'cmd' : 3, 'forStart' : false},	// stop up
+    	  0x0404	:	{'cmd' : 4, 'forStart' : true},		// start down
+    	  0x0403	:	{'cmd' : 4, 'forStart' : false},	// stop down
+    	  0x0504	:	{'cmd' : 1, 'forStart' : true},		// start left
+    	  0x0503	:	{'cmd' : 1, 'forStart' : false},	// stop left
+    	  0x0502	:	{'cmd' : 2, 'forStart' : true},		// start right
+    	  0x0501	:	{'cmd' : 2, 'forStart' : false},	// stop right
+    	  0x0302	:	{'cmd' : 5, 'forStart' : true},		// start zoom up
+    	  0x0301	:	{'cmd' : 5, 'forStart' : false},	// stop zoom up
+    	  0x0304	:	{'cmd' : 6, 'forStart' : true},		// start zoom down
+    	  0x0303	:	{'cmd' : 6, 'forStart' : false}		// stop zoom down
+      },
+      recordPanelIndex : -1,
+      playRecordLength : {},
+      playRecordStartTime : {},
+      playRecordEndTime : {},
+      ctrlKey : false,
+      playRecordInfo : [],
+      vplayers : [],
+      playBars : [],
+      playBarElms : [],
+      isCirclePlaying : false,		// 轮巡
+      circleInterval  : 10000,
+      timers		  : [],
+      timerOptions	  : {},
+      
+      video_layout	  :	'v4',		// 视频布局方式，默认4屏
+      
+      path_zhuapai    : 'C:\\video\\zhuapai\\',	// 抓拍存储目录
+      path_luxiang    : 'C:\\video\\luxiang\\',	// 录像存储目录
+      path_qiepian    : 'C:\\video\\qiepian\\',	// 切片存储目录
+      oneYearTime 	  : 365*24*60*60*1000,
+      
+      slicePos		  : 0,			// 切片时录像切换进度,相对于起始时间的秒数
+      
+      ptzStartTime	  : 0,
+      ptzEndTime	  : 0,
+      
+      isDeptZhzx	  : false,
+      useEncoderForVideo	: false,
+      errCode : {"0" : "执行成功", "3948" : "摄像机不存在", "2312" : "发送MAI消息失败",
+      			"3862" : "SDK初始化失败", "4735" : '设备不在线', "12354" : "用户不在线",
+      			"12689" : "摄像机不存在", "3938" : "摄像机不在线", "2030" : "解码插件不存在或厂商不支持",
+      			"2002" : "流控业务带宽不足", "2004" : "关闭文件播放失败", "12351" : "用户不存在"}
+    };
+    Object.extend(this.options, options || {});
+    if (!this.options.elm) {
+      alert("未安装控件，请先安装后再使用本页面");
+    }
+    //this.options.elm.attachEvent("eventClickFrame", this.onEventClickFrame.bind(this));
+    var xmldoc;
+    try {
+      xmldoc = new ActiveXObject("Microsoft.XMLDOM");
+      if (!xmldoc)
+        xmldoc = new ActiveXObject("MSXML2.DOMDocument.3.0");
+    } catch (e) {}
+    if (!xmldoc) {
+      alert("xml解析器获取错误，将导致某些功能不可用");
+    } else {
+    	xmldoc.async = "false";
+    }
+    this.options.xmlControl = xmldoc;
+  },
+
+  /*onEventClickFrame : function(frameNum, frameInfo) {
+    // 当前窗格
+    this.options.curFrameNum = frameNum;
+    frameInfo = frameInfo.replace(/\"/, "\'");
+    var tmpXmlDoc = this.loadXML(frameInfo);
+    if (!tmpXmlDoc) {
+      return;
+    }
+  },*/
+  
+  initStyle : function(){
+	var contWidth = $j('#content').width();
+  	var panelWidth = $j('#ctrl_panel').width();
+  	
+  	var totalWidth = (contWidth - panelWidth - 40);
+  	var frameWidth = (totalWidth - 10)/2;
+  	var frameHeight = frameWidth * 0.75;
+  	
+  	$j('#frameContainer').width(totalWidth);
+  	$j('.video_frame').width(frameWidth); 
+  	$j('.video_frame').height(frameHeight);
+  	
+  	this.options.totalWidth = totalWidth;
+  	this.options.frameWidth = frameWidth;
+  	this.options.frameHeight = frameHeight;
+  	
+  	this.toggleTo9V();
+  	$j("#ctrl_resumeLunxun").css('display','none');
+	$j("#ctrl_pauseLunxun").css('display','block');
+	$j("#ctrl_startVoiceTalk").css('display','block');
+	$j("#ctrl_stopVoiceTalk").css('display','none');
+  },
+
+  onVideoFrameClick : function(index) {
+	if(this.options.ctrlKey){
+		this.onVideoFrameClick_ctrlKey(index);
+		return;
+	}
+	
+    for ( var i = 0; i < this.options.frameControlIdList.length; i++) {
+      $(this.options.frameControlIdList[i]).style.borderColor = 'black';
+    }
+    $(this.options.frameControlIdList[index]).style.borderColor = 'white';
+    this.options.selectedFrameIndex = index;
+    this.options.multiSelectedFrameIndex = [index];
+    
+    if(this.isPlayingRecord(index) && !this.isRecordPanelVisible(index))
+    	setTimeout(this.showRecordPanel.bind(this,index),100);
+    else
+    	this.hideRecordPanel();
+    
+    this.navToCamOnMap(index);
+  },
+  
+  onVideoFrameClick_ctrlKey : function(index) {
+	$(this.options.frameControlIdList[index]).style.borderColor = 'white';
+	if(this.options.multiSelectedFrameIndex.indexOf(index) < 0)
+		this.options.multiSelectedFrameIndex.push(index);
+  },
+
+  onVideoFrameDblClick : function(index) {
+  //alert("vc");
+  //g_PlayFrame1 fr.width(): new 1422 350 old 352 714
+    var fr = $j("#" + this.options.frameControlIdList[index]);
+//    if(fr.width() < this.options.totalWidth - 20) // 考虑frame的边框 
+//    	this.maxFrame();
+//    else
+//   	this.restoreFrame();
+
+    if(fr.width() < this.options.totalWidth - 20) {
+	    var layout = this.options.video_layout;
+	    if(layout == "v4")
+	    	this.toggleTo4V();
+	    else if(layout == "v6")
+	    	this.toggleTo6V();
+	    else if(layout == "v7")
+	    	this.toggleTo7V();
+	    else if(layout == "v9")
+	    	this.toggleTo9V();
+	    else if(layout == "v1")
+	        this.toggleTo1V();
+	}
+  },
+
+  getSelectedFrameNum : function() {
+    if (this.options.selectedFrameIndex < 0) {
+      //alert('请先选择一个窗格')
+      return false;
+    }
+    return this.options.selectedFrameIndex + 1;
+  },
+
+  /**
+   * 解析从控件返回的xml字符串
+   */
+  loadXML : function(xmlString) {
+    var xmlDoc = this.options.xmlControl;
+    xmlDoc.loadXML(xmlString);
+    if (0 == xmlDoc.parseError.errorCode) {
+      return xmlDoc;
+    } else {
+      alert("xml解析错误:" + xmlDoc.parseError.reason);
+      return null;
+    }
+  },
+
+  login : function() {
+    var serverIp = this.options.serverIp;
+    var userName = this.options.userName;
+    var userPass = this.options.userPass || '';
+    var flag = this.options.elm.IMOSAX_InitOCX(serverIp, "8800", userName, userPass, 1);
+    // 获取用户信息
+    var msg = flag == 0 ? '登录成功' : '登录失败:' + flag + "-->" + this.options.errCode[flag + ""];
+    if(flag != 0){
+    	alert(msg);
+    	return false;
+    }
+    //var retStr = this.options.elm.IMOSAX_GetUserLoginInfo();
+    //var userObj = this.loadXML(retStr);
+    //g_UserLoginId = userObj.documentElement.selectNodes("//LOGININFO/UserLoginIDInfo/UserLoginCode")[0].text;
+    for ( var i = 0; i < this.options.frameControlIdList.length; i++) {
+      var fr = $j('#' + this.options.frameControlIdList[i]);
+      this.options.elm.IMOSAX_SetPlayWnd(i + 1, fr[0].PLAYFM_GetFrameHandle());
+      fr[0].attachEvent("eventClickFrame",this.onVideoFrameClick.bind(this,i));
+      fr[0].attachEvent("eventDblClick", this.onVideoFrameDblClick.bind(this,i));
+    }
+    
+    //read cookie
+    var _path_zhuapai = getCookie("video_path_zhuapai");
+    if(_path_zhuapai){
+    	this.options.path_zhuapai = _path_zhuapai;
+    }	
+    var _path_luxiang = getCookie("video_path_luxiang");
+    if(_path_luxiang)
+    	this.options.path_luxiang = _path_luxiang;
+    var _path_qiepian = getCookie("video_path_qiepian");
+    if(_path_qiepian)
+    	this.options.path_qiepian = _path_qiepian;
+    
+    
+    $j('#path_zhuapai').val(this.options.path_zhuapai);
+    $j('#path_luxiang').val(this.options.path_luxiang);
+    $j('#path_qiepian').val(this.options.path_qiepian);
+    
+    
+    var download_speed = getCookie("download_speed") || 2;
+    var ptz_speed = getCookie("ptz_speed") || 4;
+    var replay_protocol = getCookie("replay_protocol") || 1;
+    var video_protocol = getCookie("video_protocol") || 1;
+    
+    $j('#download_speed').val(download_speed);
+    $j('#ptz_speed').val(ptz_speed);
+    $j('#replay_protocol').val(replay_protocol);
+    $j('#video_protocol').val(video_protocol);
+    
+    
+    this.options.elm.IMOSAX_SetSingleCfgParam("PictureFluency",1);
+	this.options.elm.IMOSAX_SetSingleCfgParam("RenderMode", 0);
+    this.options.elm.IMOSAX_SetSingleCfgParam("PicFormat",1);
+    //1 ==> user TCP stream, 0 ==> user UDP stream
+    this.options.elm.IMOSAX_SetSingleCfgParam( "DataTransProtocol", replay_protocol );
+    this.options.elm.IMOSAX_SetSingleCfgParam( "StreamTransProtocol", video_protocol );
+    this.options.elm.IMOSAX_SetSingleCfgParam("SnatchPath",this.options.path_zhuapai);
+    this.options.elm.IMOSAX_SetSingleCfgParam("VideoDownloadPath",this.options.path_luxiang);
+    //set default download speed is 4, may be set 0--1、1--2、2--4、3--8 
+    this.options.elm.IMOSAX_SetSingleCfgParam( "DownloadSpeed", download_speed );
+    //default stream --->0,main stream --->1,sub stream --->2
+    this.options.elm.IMOSAX_SetSingleCfgParam("StreamType",1);
+    if(this.options.frameControlIdList.length != 1) {
+    	this.toggleTo4V();
+    }
+    return true;
+  }, 
+
+  logout : function() {
+    var flag = this.options.elm.IMOSAX_UnregOCX();
+    if (0 != flag) {
+      // 暂时不提示
+    }
+  },
+
+  getCameraList : function() {
+    var strXmlQueryCondition = "";
+    strXmlQueryCondition = '<?xml version="1.0" ?>' + '<data>'
+        + '<ItemNum>4</ItemNum>' + // 总共有四个查询条件
+        '<QueryConditionList count="4">' + '<item>' + // 不查询子域
+        '<QueryType>257</QueryType> ' + '<LogicFlag>0</LogicFlag> '
+        + '<QueryData>1</QueryData> ' + '</item>' + '<item>' + // 查询的资源类型是摄像头
+        '<QueryType>256</QueryType>' + '<LogicFlag>0</LogicFlag>'
+        + '<QueryData>1001</QueryData>' + '</item>' + '<item>' + // 查询的资源子类型是固定摄像头
+        '<QueryType>11</QueryType>' + '<LogicFlag>0</LogicFlag>'
+        + '<QueryData>1</QueryData>' + '</item>' + '<item>' + // 查询结果按照名称的升序排序
+        '<QueryType>1</QueryType> ' + '<LogicFlag>6</LogicFlag>'
+        + '<QueryData /> ' + '</item>' + '</QueryConditionList>' + '</data>';
+
+    var strXmlQueryPageInfo = '<?xml version="1.0" ?> ' + '<data>'
+        + '<PageRowNum>100</PageRowNum>' + // 最多返回100个记录
+        '<PageFirstRowNumber>0</PageFirstRowNumber>' + // 从第0个记录开始返回
+        '<QueryCount>1</QueryCount>' + // 还需要返回总记录数
+        '</data>';
+
+    var retStr = "";
+    retStr = this.options.elm.IMOSAX_QueryOrgResListEx('iccsid',
+        strXmlQueryCondition, strXmlQueryPageInfo);
+    alert(retStr);
+
+    var cameraListObj = this.loadXML(retStr);
+    if (!cameraListObj) {
+      return;
+    }
+    return cameraListObj;
+  },
+
+  getFirstCameraCode : function() {
+    cameraListObj = this.getCameraList();
+    var firstCameraCode = cameraListObj.documentElement
+        .selectNodes("//result/ResList/item/ResItemV1/ResCode");// 参见文档xml结构进行解析
+    return firstCameraCode[0].text;
+  },
+  
+  genVideoCallLog : function(cameraCode){
+    if(!cameraCode)
+       return;
+    stdPage.buildAjax()
+           .setObjectName("SctLogVideoCall")
+           .setBizAction("genVideoCall")   
+           .addParam('cameraCode',cameraCode)
+           .setLoadingPane(null)
+           .callRemote();
+  },
+
+  playCamera : function(frameNum, cameraNum) {
+    this.genVideoCallLog(cameraNum);
+	// 指挥中心用户，电脑端查看视频，针对街道模拟摄像机，切换编码器查看
+	if(this.options.useEncoderForVideo && this.options.cameraTypes[frameNum] == "标清"){
+		var thiz = this;
+    	stdPage.buildAjax().setObjectName("SctCameraInfo").setObjectEvent("BizAction")
+    		.addParam("_bizActionId","switchEncoderForVideo").addParam("cameraCode",cameraNum)
+    		.setLoadingPane(null)
+    		.callRemote(function(ret){
+    			thiz.options.playStatus[frameNum] = '';
+    		    var flag = thiz.options.elm.IMOSAX_StartFrameLive(frameNum, ret);
+    		    thiz.options.cameraIds[frameNum] = cameraNum;
+    		    if (flag != 0) {
+    		      alert("播放实况失败，错误码：" + flag + "-->" + thiz.options.errCode[flag + ""]);
+    		    }else {
+    		    	thiz.options.playStatus[frameNum] = 'liveplaying';
+    		    }
+    	});
+    	return;
+	}
+	  
+	this.options.playStatus[frameNum] = '';
+    var flag = this.options.elm.IMOSAX_StartFrameLive(frameNum, cameraNum);
+    this.options.cameraIds[frameNum] = cameraNum;
+    if (0 == flag) {
+      //alert(this.options.errCode[flag + ""]);
+      this.options.playStatus[frameNum] = 'liveplaying';
+    } else {
+      
+      alert("播放实况失败，错误码：" + flag + "-->" + this.options.errCode[flag + ""]);
+    }
+  },
+
+  onCameraDrag : function(ev) {
+    var obj = ev.srcElement ? ev.srcElement : ev.target;
+    ev.dataTransfer.setData("Text", obj.id);
+  },
+
+  onCameraDragOver : function(ev) {
+    var d = ev.dataTransfer.getData("Text");
+    if (!d || d.indexOf('cam_') != 0)
+      return;
+    if (ev.preventDefault)
+      ev.preventDefault();
+    ev.returnValue = false;
+  },
+
+  onCameraDrop : function(ev) {
+    if (ev.preventDefault)
+      ev.preventDefault();
+    ev.returnValue = false;
+
+    var d = ev.dataTransfer.getData("Text");
+    var obj = ev.srcElement ? ev.srcElement : ev.target;
+    var index = this.options.frameControlIdList.indexOf(obj.id);
+    var cameraCode = $(d).getAttribute('data-camera-number');
+    
+    this.options.cameraIds[index+1] = $(d).getAttribute('data-camera-number');
+    this.options.cameraTypes[index+1] = $(d).getAttribute('data-camera-type');
+    this.options.mapCamCodeToId[cameraCode] = $(d).getAttribute('data-camera-id');
+    this.options.keywords[index+1] = $(d).getAttribute('data-camera-keywords');
+
+    this.playCamera(index + 1, cameraCode);
+    this.onVideoFrameClick(index);
+  },
+
+  play : function() {
+    var frameNum = this.getSelectedFrameNum();
+    if (!frameNum)
+      return;
+    var cameraId = this._getSelectedCameraId();
+    if (!cameraId) {
+      return;
+    }
+    var flag = this.options.elm.IMOSAX_StartFrameLive(frameNum, cameraId);
+    if (0 == flag) {
+      //alert("实况播放成功");
+    } else {
+      alert("播放实况失败，错误码：" + ret + "-->" + this.options.errCode[flag + ""]);
+    }
+  },
+
+  stop : function() {
+    var frameNum = this.getSelectedFrameNum();
+    if (!frameNum)
+      return;
+    var cameraId = this._getSelectedCameraId();
+    if (!cameraId)
+      return;  
+      
+    var flag = this.options.elm.IMOSAX_StopFrameLive(frameNum);
+    var flag2 = this.options.elm.IMOSAX_StopReplay(frameNum);
+    var flag3 = this.options.elm.IMOSAX_StopPtzCtrl(cameraId);
+    if (0 == flag) {
+      this.options.playStatus[frameNum] = '';
+    } else {
+      alert("停止实况失败，错误码：" + ret + "-->" + this.options.errCode[flag + ""]);
+    }
+  },
+
+  _getSelectedCameraId : function() {
+    var frameNum = this.getSelectedFrameNum();
+    if (!frameNum)
+      return;
+    //if(this.options.playStatus[frameNum] == '' || !this.options.playStatus[frameNum])
+    //	return;
+    var cameraId = this.options.cameraIds[frameNum];
+    if (!cameraId) {
+      alert('请先拖入视频源');
+      return;
+    }
+    return cameraId;
+  },
+  
+  _getSelectedCameraType : function() {
+    var frameNum = this.getSelectedFrameNum();
+    if (!frameNum)
+      return;
+    var cameraType = this.options.cameraTypes[frameNum];
+    if (!cameraType) {
+      //alert('请先拖入视频源');
+      return "标清";
+    }
+    return cameraType;
+  },
+  
+  _getSelectedKeywords : function() {
+  	var frameNum = this.getSelectedFrameNum();
+    if (!frameNum)
+      return;
+    var keywords = this.options.keywords[frameNum];
+    if (!keywords) {
+      keywords = 'ptsxj';
+    }
+    return keywords;
+  },
+
+  execPos : function(cmd) {
+    var cameraId = this._getSelectedCameraId();
+    if (!cameraId) return;
+    var cameraType = this._getSelectedCameraType();
+    if (!cameraType) return;
+    var keywords = this._getSelectedKeywords();
+    if(!keywords) return;
+    
+    
+    var ptzSpeed = getCookie("ptz_speed") || 4;
+    
+     // ptzSpeed 通过前台设置存储在cookie中
+    /*
+    var ptzSpeed = 4;
+    if(cameraType == "高清") {
+    	ptzSpeed = 5;
+    }else if(cameraType == "标清"){
+    	ptzSpeed = 2;
+    } else{
+    	ptzSpeed = 4;
+    }
+    */
+    if(cameraType == "IPC"){
+    	if(keywords == "[znzp]") {
+    		var camId = this.options.mapCamCodeToId[cameraId];
+    		stdPage.buildAjax().setObjectName("SctCameraInfo").setObjectEvent("BizAction")
+    		.addParam("_bizActionId","stopZnzp").addParam("cameraId",camId)
+    		.setLoadingPane(null)
+    		.callRemote();
+    	}
+    	var flag = this.options.elm.IMOSAX_SendPtzCtrlCommand(cameraId, cmd, ptzSpeed, ptzSpeed, 0);
+    	if (0 != flag)
+    		alert("云台控制出错，错误码：" + flag + "-->" + this.options.errCode[flag + ""]);
+    }else{ //其它摄像机通过矩阵进行云台控制
+    	var o = this.options.mapCmdToPtzCmd[cmd];
+    	if(!o) return;
+    	
+    	var camId = this.options.mapCamCodeToId[cameraId]; //  把摄像机编码转为Id传送到后台
+    	stdPage.buildAjax().setObjectName("SctCameraInfo").setObjectEvent("BizAction")
+    		.addParam("_bizActionId","sendPtzCmd").addParam("cameraId",camId)
+    		.addParam("forStart",o.forStart).addParam("cmd",o.cmd).addParam("ptzSpeed",ptzSpeed)
+    		.setLoadingPane(null)
+    		.callRemote(function(){});
+    }
+    
+    if(cmd == 0x0504 || cmd == 0x0502){ // 向左开始和向右开始
+    	this.options.ptzStartTime = new Date();
+    }else if(cmd == 0x0503 || cmd == 0x0501){
+    	this.options.ptzEndTime = new Date();
+    	
+    	var time = (this.options.ptzEndTime - this.options.ptzStartTime)/1000;
+    	var camId = this.options.mapCamCodeToId[cameraId];
+    	stdPage.buildAjax().setObjectName("SctCameraInfo").setObjectEvent("BizAction")
+    		.addParam("_bizActionId","refreshVideoAngle").addParam("cameraId",camId)
+    		.addParam("cmd",cmd).addParam("ptzSpeed",ptzSpeed).addParam("time",time)
+    		.setLoadingPane(null)
+    		.callRemote(function(){
+    			  var data = $j('#cam_'+camId).data();
+    			  if(!data)
+    			  	return;
+    			  var posX = data.posX, posY = data.posY;
+    			  if(!posX || !posY)
+    				  return;
+    			  window.mapFrame.showVideoAngle(cameraId,posX,posY);
+    		});
+    }
+  },
+
+  /** 向上 */
+  startPosUp : function() {
+    this.execPos(0x0402);
+  },
+
+  /** 向上停止 */
+  stopPosUp : function() {
+    this.execPos(0x0401);
+  },
+
+  /** 向下 */
+  startPosDown : function() {
+    this.execPos(0x0404);
+  },
+
+  /** 向下停止 */
+  stopPosDown : function() {
+    this.execPos(0x0403);
+  },
+
+  /** 向左 */
+  startPosLeft : function() {
+    this.execPos(0x0504);
+  },
+
+  /** 向左停止 */
+  stopPosLeft : function() {
+    this.execPos(0x0503);
+  },
+
+  /** 向右 */
+  startPosRight : function() {
+    this.execPos(0x0502);
+  },
+
+  /** 向右停止 */
+  stopPosRight : function() {
+    this.execPos(0x0501);
+  },
+
+  /** 向左上 */
+  startPosLeftUp : function() {
+    this.execPos(0x0702);
+  },
+
+  /** 向左上停止 */
+  stopPosLeftUp : function() {
+    this.execPos(0x0701);
+  },
+
+  /** 向左下 */
+  startPosLeftDown : function() {
+    this.execPos(0x0704);
+  },
+
+  /** 向左下停止 */
+  stopPosLeftDown : function() {
+    this.execPos(0x0703);
+  },
+
+  /** 向右上 */
+  startPosRightUp : function() {
+    this.execPos(0x0802);
+  },
+
+  /** 向右上停止 */
+  stopPosRightUp : function() {
+    this.execPos(0x0801);
+  },
+
+  /** 向右下 */
+  startPosRightDown : function() {
+    this.execPos(0x0804);
+  },
+
+  /** 向右下停止 */
+  stopPosRightDown : function() {
+    this.execPos(0x0803);
+  },
+  /** 放大 */
+  startZoomTele : function() {
+    this.execPos(0x0302);
+  },
+
+  /** 放大停止 */
+  stopZoomTele : function() {
+    this.execPos(0x0301);
+  },
+
+  /** 缩小 */
+  startZoomWide : function() {
+    this.execPos(0x0304);
+  },
+
+  /** 缩小停止 */
+  stopZoomWide : function() {
+    this.execPos(0x0303);
+  },
+
+  lockPos : function() {
+    var frameNum = this.getSelectedFrameNum();
+    if (!frameNum)
+      return;
+    var cameraId = this.options.cameraIds[frameNum];
+    if (!cameraId) {
+      alert('请先拖入视频源');
+      return;
+    }
+    var flag = this.options.elm.IMOSAX_LockPtzCtrl(cameraId);
+    if (0 != flag) {
+      alert("云台控制出错，错误码：" + flag + "-->" + this.options.errCode[flag + ""]);
+    }
+  },
+
+  unlockPos : function() {
+    var frameNum = this.getSelectedFrameNum();
+    if (!frameNum)
+      return;
+    var cameraId = this.options.cameraIds[frameNum];
+    if (!cameraId) {
+      alert('请先拖入视频源');
+      return;
+    }
+    var flag = this.options.elm.IMOSAX_UnlockPtzCtrl(cameraId);
+    if (0 != flag) {
+      alert("云台控制出错，错误码：" + flag + "-->" + this.options.errCode[flag + ""]);
+    }
+  },
+  // <?xml version="1.0"?>
+  // <PresetList count="3">
+  // <item><PresetValue>1</PresetValue><PresetDesc>1</PresetDesc></item>
+  // <item><PresetValue>2</PresetValue><PresetDesc>2</PresetDesc></item>
+  // <item><PresetValue>3</PresetValue><PresetDesc>3</PresetDesc></item>
+  // </PresetList>
+  loadPosPresetList : function() {
+    var cameraId = this._getSelectedCameraId();
+    if (!cameraId)
+      return;
+    var xml = this.options.elm.IMOSAX_QueryPtzPresetList(cameraId);
+    if (!xml)
+      return;
+    var dom = this.loadXML(xml);
+    var values = dom.selectNodes("//PresetList/item/PresetValue");
+    var texts = dom.selectNodes("//PresetList/item/PresetDesc");
+    var sel = $(this.options.posPresetSelectorId);
+    if (!sel)
+      return;
+    var opts = sel.options;
+    for ( var i = 0; i < opts.length; i++) {
+      opts[i].text = '（空）';
+    }
+    for ( var i = 0; i < values.length; i++) {
+      if (i >= opts.length)
+        break;
+      for ( var j = 0; j < opts.length; j++) {
+        if (opts[j].value == values[i].text) {
+          opts[j].text = texts[i].text;
+        }
+      }
+    }
+  },
+
+  addPosPreset : function() {
+    var cameraId = this._getSelectedCameraId();
+    if (!cameraId)
+      return;
+    var preset = prompt('请输入预置位及描述（格式：1,xxxx）：');
+	if(!preset){
+		if(preset == '')
+			alert('预置位不能为空！');
+		return;
+	} 
+    var vals = preset.split(",");
+    var val = parseInt(vals[0]);
+    
+    if(val > 250 || val < 0 || isNaN(val)) {
+        alert("请输入0到250之间的任意数值!");
+        return;
+    }
+    else {
+        if(!this.options.isDeptZhzx && val > 200){
+            alert("不是管理员请输入0到199之间的任意数值");
+            return;
+        }
+    }
+    this.options.elm.IMOSAX_AddPtzPreset(cameraId, val, vals[1]);
+    this.loadPosPresetList();
+  },
+
+  delPosPreset : function() {
+    var cameraId = this._getSelectedCameraId();
+    if (!cameraId)
+      return;
+    //var val = $(this.options.posPresetSelectorId).value;
+    this.options.elm.IMOSAX_DelPtzPreset(cameraId, val);
+    this.loadPosPresetList();
+  },
+
+  usePosPreset : function() {
+    var cameraId = this._getSelectedCameraId();
+    if (!cameraId)
+      return;
+    var xml = this.options.elm.IMOSAX_QueryPtzPresetList(cameraId);
+    if (!xml)
+      return;
+    var dom = this.loadXML(xml);
+    var values = dom.selectNodes("//PresetList/item/PresetValue");
+    var texts = dom.selectNodes("//PresetList/item/PresetDesc");
+    var _v=[],_text=[];
+    for ( var i = 0; i < values.length; i++) {
+    	_v.push(values[i].text);
+        _text.push(texts[i].text);
+    }
+    var url = js.CONTEXT_PATH + '/sct/_tpl/video_control/query_preset.jsp?cameraCode=' + cameraId + '&values=' + _v +
+        '&texts=' + encodeURIComponent(_text) + '&UTF8Request=true';
+	js.win.dialog(url,[this,function(ret){stdPage.usePtzPreset(ret);}],'width=650px,height=350px,status=no');
+  },
+  
+  usePtzPrest : function(cameraCode,pValue) {
+  	this.options.elm.IMOSAX_UsePtzPreset(cameraCode,pValue);
+  },
+
+  fullScreen : function() {
+    this.options.elm.IMOSAX_FullScreen();
+  },
+
+  maxFrame : function() {
+    var frameNum = this.getSelectedFrameNum();
+    if (!frameNum)
+      return;
+    var fr = $j('#' + this.options.frameControlIdList[this.options.selectedFrameIndex]);
+    fr.width(this.options.totalWidth);
+    fr.height(this.options.totalWidth * 0.75);
+    
+    for ( var i = 0; i < this.options.frameControlIdList.length; i++) {
+      if (i == this.options.selectedFrameIndex)
+        continue;
+      var id = this.options.frameControlIdList[i];
+      var fr = $j('#' + id);
+      fr.width(0);
+      fr.height(0);
+      //this.options.elm.IMOSAX_StopFrameLive(i+1);
+    }
+  },
+
+  restoreFrame : function() {
+    var frameNum = this.getSelectedFrameNum();
+    if (!frameNum)
+      return;
+    
+    var layout = this.options.video_layout;
+    if(layout == "v4")
+    	this.toggleTo4V();
+    else if(layout == "v6")
+    	this.toggleTo6V();
+    else if(layout == "v7")
+    	this.toggleTo7V();
+    else if(layout == "v9")
+    	this.toggleTo9V();
+    else if(layout == "v1")
+        this.toggleTo1V();
+  },
+
+  snatchOnce : function() {
+    var frameNum = this.getSelectedFrameNum();
+    if (!frameNum)
+      return;
+    var date = new Date();
+    var fileName = date.getTime();
+    
+    var o = this.options.elm.IMOSAX_SnatchOnceEx(frameNum,fileName);
+    if(o == 0)
+    	alert("抓拍成功");
+    else
+    	alert("抓拍失败：" + o);
+  },
+  
+  /*snatchForEvent : function(fieldName) {
+	var frameNum = this.getSelectedFrameNum();
+	if (!frameNum)
+		return;
+	var date = new Date();
+	var fileName = date.getTime();
+	var o = this.options.elm.IMOSAX_SnatchOnceEx(frameNum,fileName);
+	if(o != 0)
+	   	alert("抓拍失败：" + o);
+  },*/
+
+  startLocalStorage : function() {
+    var x = this.options.elm.IMOSAX_GetSingleCfgParam('VideoFormat');
+    this.options.elm.IMOSAX_SetSingleCfgParam('VideoFormat', 1);
+    x = this.options.elm.IMOSAX_GetSingleCfgParam('VideoFormat');
+    var frameNum = this.getSelectedFrameNum();
+    if (!frameNum)
+      return;
+    this.options.elm.IMOSAX_StartLocalStorage(frameNum);
+  },
+
+   stopLocalStorage : function(frm) {
+    
+    var frm = frm || this.getSelectedFrameNum();
+    if( !frm ) return;
+    
+     var ret = this.options.elm.IMOSAX_StopLocalStorage( frm );
+      if(ret == 0){
+        $j("#ctrl_recordStop").css('display','none');
+        $j("#ctrl_recordStart").css('display','block');
+    }
+  },
+  
+  
+  startLocalStorageEx : function(){
+     var frm = this.getSelectedFrameNum();
+     var camId = this._getSelectedCameraId();
+     var self = this;
+     var recordTime =  $j("#ctrl_recordTime").val();
+     js.validate.checkPoIntOrEmpty(recordTime,'输入的时间');
+     if( !frm || !camId) return;
+        stdPage.buildAjax()
+           .setObjectName("SctCameraInfo")
+           .setBizAction("getExFileName")   
+           .addParam('cameraCode',camId)
+           .setLoadingPane(null)
+           .callRemote(function(pcFileName){
+                var name = prompt("请输入您要保存的录像名(不包含扩展名)", pcFileName); 
+                var ret = self.options.elm.IMOSAX_StartLocalStorageEx(frm,name);
+                  if(ret == 0){
+                    $j("#ctrl_recordStop").css('display','block');
+                    $j("#ctrl_recordStart").css('display','none');
+                    window.setInterval(function(){
+                        recordTime--;
+                        if(recordTime < 0){
+                            self.stopLocalStorage(frm);
+                            return;
+                        }
+                     },1000);
+                }
+                
+           });
+    
+  },
+
+  playLocalRecord : function() {
+    var frameNum = this.getSelectedFrameNum();
+    if (!frameNum)
+      return;
+    this.options.elm.IMOSAX_StartLocalReplay(frameNum,
+        'C:\\record_2014-03-28\\sjt-3-20140328132121-20140328132148-504966.ts');
+    this.options.playStatus[frameNum] = 'playing';
+    $j('#slider').slider({
+      slide : this.dragPlay.bind(this)
+    });
+    this.syncPlayPos(frameNum);
+  },
+
+  stopRecord : function() {
+    var frameNum = this.getSelectedFrameNum();
+    if (!frameNum)
+      return;
+    this.options.elm.IMOSAX_StopReplay(frameNum);
+    this.options.playStatus[frameNum] = '';
+  },
+
+  pauseRecord : function() {
+    var frameNum = this.getSelectedFrameNum();
+    if (!frameNum)
+      return;
+    this.options.elm.IMOSAX_PauseReplay(frameNum);
+    this.options.playStatus[frameNum] = 'paused';
+    this._tooglePauseButton();
+  },
+
+  resumeRecord : function() {
+    var frameNum = this.getSelectedFrameNum();
+    if (!frameNum)
+      return;
+    this.options.elm.IMOSAX_ResumeReplay(frameNum);
+    this.options.playStatus[frameNum] = 'playing';
+    this._tooglePauseButton();
+    this.syncPlayPos(frameNum);
+  },
+  
+  _tooglePauseButton : function(){
+    var d = $('button_pause').style.display;
+    $('button_pause').style.display = $('button_resume').style.display;
+    $('button_resume').style.display = d;
+  },
+
+  accelerateRecord : function() {
+    var frameNum = this.getSelectedFrameNum();
+    if (!frameNum)
+      return;
+    var s = this.options.playSpeeds[frameNum] || 9;// 9 for normal speed
+    s++;
+    if (s >= this.options.availablePlaySpeedList.length)
+      return;
+    this._setPlaySpeed(frameNum, s);
+  },
+
+  decelerateRecord : function() {
+    var frameNum = this.getSelectedFrameNum();
+    if (!frameNum)
+      return;
+    var s = this.options.playSpeeds[frameNum] || 9;// 9 for normal speed
+    s--;
+    if (s < 0)// 0 for minimum
+      return;
+    this._setPlaySpeed(frameNum, s);
+  },
+
+  _setPlaySpeed : function(frameNum, speed) {
+    this.options.playSpeeds[frameNum] = speed;
+    this.options.elm.IMOSAX_SetPlaySpeed(frameNum, speed);
+    $j('#playSpeedDiv').html(this.options.availablePlaySpeedList[speed]);
+  },
+
+  syncPlayPos : function(frameNum) {
+    if (this.options.playStatus[frameNum] == 'playing') {
+      var total = this.options.playRecordLength[frameNum] || 3600;
+      var time = this.options.elm.IMOSAX_GetReplayPos(frameNum);
+      $j("#slider").slider({ 
+        value : time * 100 / total
+      });
+      setTimeout(this.syncPlayPos.bind(this, frameNum), 1000);
+    }
+  },
+
+  dragPlay : function(event, ui) {
+    var frameNum = this.getSelectedFrameNum();
+    if (!frameNum)
+      return;
+    var total = this.options.playRecordLength[frameNum] || 3600;
+    this.options.elm.IMOSAX_DragPlayII(frameNum, ui.value*total / 100);
+  },
+  
+  onCtrlKeyDown : function(event){
+	var e = event || window.event || arguments.callee.caller.arguments[0];
+	if(!e) return;
+	if(e.keyCode == 17){
+		this.options.ctrlKey = true;
+		return;
+	}
+	if(this.options.selectedFrameIndex < 0)
+		return;
+	if(e.keyCode == 37 && e.srcElement.id.indexOf("g_PlayFrame") >= 0)
+		this.startPosLeft();
+	else if(e.keyCode == 38 && e.srcElement.id.indexOf("g_PlayFrame") >= 0)
+		this.startPosUp();
+	else if(e.keyCode == 39 && e.srcElement.id.indexOf("g_PlayFrame") >= 0)
+		this.startPosRight();
+	else if(e.keyCode == 40 && e.srcElement.id.indexOf("g_PlayFrame") >= 0)
+		this.startPosDown();
+  },
+  
+  onCtrlKeyUp : function(event){
+	var e = event || window.event || arguments.callee.caller.arguments[0];
+	if(!e) return;
+	if(e.keyCode == 17){
+		this.options.ctrlKey = false;
+		return;
+	}
+	if(this.options.selectedFrameIndex < 0)
+	  return;
+	if(e.keyCode == 37 && e.srcElement.id.indexOf("g_PlayFrame") >= 0)
+		this.stopPosLeft();
+	else if(e.keyCode == 38 && e.srcElement.id.indexOf("g_PlayFrame") >= 0)
+		this.stopPosUp();
+	else if(e.keyCode == 39 && e.srcElement.id.indexOf("g_PlayFrame") >= 0)
+		this.stopPosRight();
+	else if(e.keyCode == 40 && e.srcElement.id.indexOf("g_PlayFrame") >= 0)
+		this.stopPosDown();
+  },
+  
+  openRecordDialog : function(){
+	var frameNum = this.getSelectedFrameNum();
+	if (!frameNum)
+		return;
+	var cameraId = this._getSelectedCameraId();
+	if (!cameraId)
+		return;
+	var url = js.CONTEXT_PATH + '/sct/_tpl/video_control/query_record.jsp?cameraCode=' 
+				+ cameraId + '&frameNum=' + frameNum;
+	js.win.dialog(url,[this],'width=650px,height=350px,status=no');
+	
+  },
+  
+  imos_queryRecord : function(cameraCode,beginTime,endTime){
+  	  //修改录像查询接口IMOSAX_QueryRecord-->IMOSAX_UnitedRecordRetrieval
+	  var ret = this.options.elm.IMOSAX_UnitedRecordRetrieval(cameraCode,beginTime,endTime);
+	  return ret;
+  },
+  
+  imos_startDownMediaStream : function(cameraCode,startTime,endTime){
+  	//新的下载接口
+  	var ret = this.options.elm.IMOSAX_StartDownMediaStreamII(cameraCode,startTime,endTime);
+  	return ret;
+  },
+  
+  isPlayingRecord : function(index){
+	  return this.options.playStatus[index+1] == "playing" 
+		  	|| this.options.playStatus[index+1] == "paused";
+  },
+  
+  showRecordPanel : function(index){
+	  $j('#' + "recordPanelDiv").show();
+	  var offset = $j('#' + this.options.frameControlIdList[index]).offset();
+	  var top = offset.top + this.options.frameHeight, left = offset.left + 2;
+	  $j('#' + "recordPanelDiv").offset({top:top,left:left});
+	  this.options.recordPanelIndex = index;
+	  
+	  $j('#slider').slider({
+	      slide : this.dragPlay.bind(this)
+	  });
+	  this.syncPlayPos(index+1);
+  },
+  
+  hideRecordPanel : function(){
+	  $j("#recordPanelDiv").hide();
+	  this.options.recordPanelIndex = -1;
+  },
+  
+  isRecordPanelVisible : function(index){
+	  var display = $j("#recordPanelDiv")[0].style.display;
+	  return display != 'none' && this.options.recordPanelIndex == index;
+  },
+  
+  openSliceWindow : function(){
+	  var frameNum = this.getSelectedFrameNum();
+	  var cameraId = this._getSelectedCameraId();
+	  var startTime = this.options.playRecordStartTime[frameNum];
+	  var endTime = this.options.playRecordEndTime[frameNum];
+	  var url = js.CONTEXT_PATH + '/sct/_tpl/slice_window/slice_window.jsp?cameraCode=' + cameraId
+	  	+ '&startTime=' + encodeURIComponent(startTime) + '&endTime=' + encodeURIComponent(endTime);
+	  var ops = 'center=yes,resizable=yes,width=850px,height=480px,' + 
+	  			'status=no,,toolbar=no,menubar=no,location=no';
+	  //window.open(url,"_blank");
+	  
+	  this.stopRecord();
+	  $j("#button_slice").attr("href",url);
+	  $j("#button_slice")[0].click();
+  },
+  
+  openSliceDialog : function(){
+	  var frameNum = this.getSelectedFrameNum();
+	  if (!frameNum)
+		  return;
+	  var cameraId = this._getSelectedCameraId();
+	  if (!cameraId)
+		  return;
+	  $j("#sliceDialogDiv").show();
+	  
+	  $j("#sliceCameraCode").val(cameraId);
+	  var startTime = this.options.playRecordStartTime[frameNum];
+	  var endTime = this.options.playRecordEndTime[frameNum];
+	  $j("#sliceStartTime").val(startTime);
+	  $j("#sliceEndTime").val(endTime);
+  },
+  
+  startSliceRecord : function(){
+	  this.hideRecordPanel();
+	  $j("#sliceDialogDiv").hide();
+	  setTimeout(this.doSliceRecord.bind(this),100);
+  },
+  
+  
+  
+  
+  startVodReplayII : function(frameNum,cameraCode,startTime,endTime){
+    return this.options.elm.IMOSAX_StartVodReplayII(frameNum,cameraCode,startTime,endTime); 
+  },
+  
+  stopFrameLive: function(frameNum){
+    this.options.elm.IMOSAX_StopFrameLive(frameNum);
+  },
+  
+  stopReplay : function(frameNum){
+    this.options.elm.IMOSAX_StopReplay(frameNum);
+  },
+  
+  doSliceRecord : function(){
+	  var frameNum = this.getSelectedFrameNum();
+	  if (!frameNum)
+		  return;
+	  var startTime = $j("#sliceStartTime").val();
+	  var endTime = $j("#sliceEndTime").val();
+	  var date1 = parseDate(startTime);
+	  var date2 = parseDate(endTime);
+	  var totalTime = (date2 - date1) / 1000;
+	  var interval = parseInt($j("#sliceInterval").val());
+	  var fileNames = [];
+	  
+	  this.options.elm.IMOSAX_SetSingleCfgParam("SnatchPath",this.options.path_qiepian);
+	  this.options.slicePos = 0;
+	  this.doSliceRecordImpl(frameNum, totalTime, interval, fileNames, this.sliceFinishCallback.bind(this,frameNum));
+  },
+  
+  doSliceRecordImpl : function(frameNum, totalTime, interval, fileNames, callback){
+	  var pos = this.options.slicePos;
+	  if(pos > totalTime || fileNames.length >= 10){
+		  alert("切片结束!");
+		  callback(fileNames);
+		  return;
+	  }
+	  
+	  var thiz = this;
+	  this.options.elm.IMOSAX_DragPlayII(frameNum,pos);
+	  setTimeout(function(){
+		  var fileName = new Date().getTime() + "_" + pos;
+		  var o = thiz.options.elm.IMOSAX_SnatchOnceEx(frameNum,fileName);
+		  if(o == 0)
+			  fileNames.push(fileName);
+		  
+		  thiz.options.slicePos += interval;
+		  setTimeout(thiz.doSliceRecordImpl.bind(thiz,frameNum,totalTime,interval,fileNames,callback),500);
+	  },500);
+  },
+  
+  sliceFinishCallback : function(frameNum,fileNames){
+	  this.options.elm.IMOSAX_SetSingleCfgParam("SnatchPath",this.options.path_zhuapai);
+	  
+	  var s = js.date.toFormatString(new Date(),"yyyy-MM-dd");
+	  //var s = formatDate(new Date()).substring(0,10).replace(/\:/g, "-");
+	  s = this.options.path_qiepian + "snap_" + s + "\\";
+	  
+	  $j("#sliceResult")[0].innerHTML = "";
+	  for(var i = 0; i<fileNames.length; i++){
+		  var fileName = fileNames[i];
+		  var path = s + fileName + ".bmp";
+		  var pos = fileName.substring(fileName.indexOf("_")+1);
+		  $j("#sliceResult").append("<img src='" + path + "' ondblclick='vc.dragPlayToPos(" + frameNum + "," + pos +")'></img>");
+	  }
+	  $j("#sliceResultDiv").show();
+  },
+  
+  dragPlayToPos : function(frameNum,pos){
+	  this.options.elm.IMOSAX_DragPlayII(frameNum,pos);
+  },
+
+  openEventWindow : function(){
+	var frameNum = this.getSelectedFrameNum();
+	if (!frameNum)
+		return;
+	var cameraId = this._getSelectedCameraId();
+	if (!cameraId)
+		return;
+	
+	var camId = this.options.mapCamCodeToId[cameraId];
+	var url = js.CONTEXT_PATH + "/std/entity/add.jsp?" + 
+	  	"objectName=SctEventInfo&objectEvent=PreAdd" +
+	  	"&$relatedField=sctCameraInfo&$relatedFieldValue=" + camId +
+	  	"&$bizId=draft&$ops=audx";
+	  js.win.dialog(url,[this],"width=700px,height=500px,status=no,center=yes");
+  },
+  
+  startLunxun : function(){
+	  var frameIds = this.options.multiSelectedFrameIndex.sort();
+	  if(frameIds.length == 0){
+		  alert('请选择轮巡视频窗口!');
+		  return;
+	  }
+		  
+	  var cameraCodes = [], cameraTypes = [], thiz = this;
+	  var divId = $j("#menuTabs li.active").attr("name");
+	  $j("#" + divId + " li.secondTreeSelected a").each(function(){
+		  var cameraCode = $j(this).data()["cameraNumber"];
+		  var cameraType = $j(this).data()["cameraType"];
+		  cameraCodes.push(cameraCode);
+		  cameraTypes.push(cameraType);
+		  thiz.options.mapCamCodeToId[cameraCode] = $j(this).data()["cameraId"];
+	  });
+	  if(cameraCodes.length == 0){
+		  alert('请选择轮巡视频源!');
+		  return;
+	  }
+	  
+	  this.options.isCirclePlaying = true;
+	  for(var i = 0; i<frameIds.length; i++){
+		  var frameId = frameIds[i];
+		  this.options.playStatus[frameId+1] = 'lunxun'; //切换视频控件状态为轮巡
+		  //if(this.options.cachedLunxunFrameIds.indexOf(frameId) < 0)
+			  //this.options.cachedLunxunFrameIds.push(frameId);
+	  }
+	  
+	  var timerName = "timer_" + frameIds.join("_");
+	  var timerOption = {"frameIds":frameIds, "cameraCodes":cameraCodes, "cameraTypes":cameraTypes, "startPos":0};
+	  this.options.timerOptions[timerName] = timerOption;
+	  
+	  var timer = new Timer(this.startCirclePlay.bind(this,timerName),this.options.circleInterval,true);
+	  this.options.timers.push(timer);
+  },
+  
+  startCirclePlay : function(timerName){
+	  var _option = this.options.timerOptions[timerName];
+	  var frameIds = _option.frameIds; 
+	  var cameraCodes = _option.cameraCodes;
+	  var cameraTypes = _option.cameraTypes;
+	  var startPos = _option.startPos;
+	  var i = 0, j = startPos, n = cameraCodes.length;
+	  if(j > n-1)
+		  j = 0;
+	  
+	  for(; i < frameIds.length; i++){
+		  var frameId = frameIds[i];
+		  if(j + i > n-1){
+			  this.options.elm.IMOSAX_StopFrameLive(frameId+1);
+			  continue;
+		  }
+		  var cameraCode = cameraCodes[j+i];
+		  var cameraType = cameraTypes[j+i];
+		  if(this.options.useEncoderForVideo && cameraType == "标清"){
+			var thiz = this;
+    		stdPage.buildAjax().setObjectName("SctCameraInfo").setObjectEvent("BizAction")
+    		.addParam("_bizActionId","switchEncoderForVideo").addParam("cameraCode",cameraCode)
+    		.setLoadingPane(null)
+    		.callRemote(thiz.playCameraWithEnc(frameId, cameraCode).bind(thiz));
+		  }
+		  else {
+		  	var flag = this.options.elm.IMOSAX_StartFrameLive(frameId+1, cameraCode);
+		  	if(flag == 0)
+			  this.options.cameraIds[frameId+1] = cameraCode;
+		  }
+	  }
+	  j = j + i > n - 1 ? 0 : j + i;
+	  
+	  this.options.timerOptions[timerName]['startPos'] = j;
+  },
+  
+  playCameraWithEnc : function(frameId, cameraCode) {
+  	var frameId = frameId;
+  	var cameraCode = cameraCode;
+    return function(ret){
+        
+        var flag = this.options.elm.IMOSAX_StartFrameLive(frameId+1, ret);
+        if(flag == 0)
+            this.options.cameraIds[frameId+1] = cameraCode;
+    }
+  },
+  
+  pauseLunxun : function(){
+	  var timers = this.options.timers;
+	  var i = 0, n = timers.length;
+	  for(; i<n; i++){
+		  var timer = timers[i];
+		  timer.pause();
+	  }
+	  $j("#ctrl_pauseLunxun").css('display','none');
+	  $j("#ctrl_resumeLunxun").css('display','block');
+  },
+  
+  resumeLunxun : function(){
+	  var timers = this.options.timers;
+	  var i = 0, n = timers.length;
+	  for(; i<n; i++){
+		  var timer = timers[i];
+		  timer.resume();
+	  }
+	  $j("#ctrl_resumeLunxun").css('display','none');
+	  $j("#ctrl_pauseLunxun").css('display','block');
+  },
+  
+  switchLunxun : function(){
+	  var timers = this.options.timers;
+	  var i = 0, n = timers.length;
+	  for(; i<n; i++){
+		  var timer = timers[i];
+		  timer.switchNext();
+	  }
+  },
+  
+  openLunxunParamsWin : function(){
+	  $j("#lunxunParamsWin").show();
+  },
+  
+  confirmLunxunParams : function(){
+	  this.options.circleInterval = $j('#lunxunInterval').val() * 1000;
+	  $j("#lunxunParamsWin").hide();
+  },
+  
+  cancelLunxunParams : function(){
+	  $j("#lunxunParamsWin").hide();
+	  $j('#lunxunInterval').val(this.options.circleInterval / 1000);
+  },
+  
+  openConfigWin : function(){
+	  $j("#configParamWin").show();
+  },
+  
+  
+  selectSavePath : function(elmId){
+	  try{
+		  var folder = new ActiveXObject("Shell.Application").BrowseForFolder(0, "请选择路径", 0, "");
+		  if(folder != null){
+			  var path = folder.items().item().Path;
+			  if(path.charAt(path.length-1) != '\\')
+				  path += '\\';
+			  $j('#' + elmId).val(path);
+		  }
+	  }catch(e){
+		  alert(e.message);
+	  }
+  },
+  
+  confirmConfigParams : function(){
+	  this.options.path_zhuapai = $j('#path_zhuapai').val();
+	  this.options.path_luxiang = $j('#path_luxiang').val();
+	  this.options.path_qiepian = $j('#path_qiepian').val();
+    
+       var download_speed = $j('#download_speed').val();
+    
+        var replay_protocol = $j('#replay_protocol').val();
+        var ptz_speed = $j('#ptz_speed').val();
+        var video_protocol = $j('#video_protocol').val();
+	  $j("#configParamWin").hide();
+	  
+	  var date = new Date();
+	  date.setTime(date.getTime() + this.options.oneYearTime);
+	  document.cookie = "video_path_zhuapai=" + escape(this.options.path_zhuapai) + "; expires=" + date.toGMTString();
+	  document.cookie = "video_path_luxiang=" + escape(this.options.path_luxiang) + "; expires=" + date.toGMTString();
+	  document.cookie = "video_path_qiepian=" + escape(this.options.path_qiepian) + "; expires=" + date.toGMTString();
+    
+    document.cookie = "download_speed=" + escape( download_speed ) + "; expires=" + date.toGMTString();
+    document.cookie = "replay_protocol=" + escape( replay_protocol ) + "; expires=" + date.toGMTString();
+    document.cookie = "video_protocol=" + escape( video_protocol ) + "; expires=" + date.toGMTString();
+    document.cookie = "ptz_speed=" + escape( ptz_speed ) + "; expires=" + date.toGMTString();
+    
+    
+    this.setDownloadSpeed(download_speed);
+    this.setDataTransProtocol(replay_protocol);
+    this.setStreamTransProtocol(video_protocol);
+	  
+	  
+	  //抓拍图片地址
+	  this.options.elm.IMOSAX_SetSingleCfgParam("SnatchPath",this.options.path_zhuapai);
+	  //录像下载地址
+	  this.options.elm.IMOSAX_SetSingleCfgParam("VideoDownloadPath",this.options.path_luxiang);
+	  
+  },
+  
+  setDownloadSpeed : function(speed){
+     this.options.elm.IMOSAX_SetSingleCfgParam( "DownloadSpeed", speed );
+  },
+  //1 ==> user TCP stream, 0 ==> user UDP stream
+  setDataTransProtocol : function(protocol){
+     this.options.elm.IMOSAX_SetSingleCfgParam( "DataTransProtocol", protocol );
+  },
+   //1 ==> user TCP stream, 0 ==> user UDP stream
+  setStreamTransProtocol : function(protocol){
+     this.options.elm.IMOSAX_SetSingleCfgParam( "StreamTransProtocol", protocol );
+  },
+  
+  cancelConfigParams : function(){
+	  $j("#configParamWin").hide();
+	  $j('#path_zhuapai').val(this.options.path_zhuapai);
+	  $j('#path_luxiang').val(this.options.path_luxiang);
+	  $j('#path_qiepian').val(this.options.path_qiepian);
+  },
+  
+  toggleTo1V : function(){
+      var selectedFrameIndex = this.options.selectedFrameIndex;
+	  for ( var i = 0; i < this.options.frameControlIdList.length; i++) {
+		  if(i == selectedFrameIndex){
+			  var elmId = this.options.frameControlIdList[i];
+			  var elm = $j("#" + elmId);
+			  elm.css('display','block');
+			  elm.width(this.options.totalWidth -10);
+			  elm.height(elm.width() * 0.75);
+		  }
+		  else
+			  $(this.options.frameControlIdList[i]).style.display = 'none';
+	  }
+	  this.options.video_layout = "v1";
+  },
+  
+  toggleTo4V : function(){
+	  for ( var i = 0; i < this.options.frameControlIdList.length; i++) {
+		  if(i <= 3){
+			  var elmId = this.options.frameControlIdList[i];
+			  var elm = $j("#" + elmId);
+			  elm.css('display','block');
+			  elm.width( (this.options.totalWidth -10) / 2 );
+			  elm.height(elm.width() * 0.75);
+		  }
+		  else
+			  $(this.options.frameControlIdList[i]).style.display = 'none';
+	  }
+	  this.options.video_layout = "v4";
+  },
+  
+  toggleTo6V : function(){
+	  for ( var i = 0; i < this.options.frameControlIdList.length; i++) {
+		  var elmId = this.options.frameControlIdList[i];
+		  var elm = $j("#" + elmId);
+		  elm.css('display','');
+		  var _width = (this.options.totalWidth -17) / 3;
+		  var _height = _width * 0.75;
+		  
+		  if(i == 0){
+			  elm.width( _width * 2 + 4 );
+			  elm.height( _height * 2 + 3 );
+		  }else if(i <= 5){
+			  elm.width( _width );
+			  elm.height( _height );
+		  }else
+			  elm.css('display','none');
+	  }
+	  this.options.video_layout = "v6";
+  },
+  
+  toggleTo7V : function(){
+	  for ( var i = 0; i < this.options.frameControlIdList.length; i++) {
+		  var elmId = this.options.frameControlIdList[i];
+		  var elm = $j("#" + elmId);
+
+		  if(i <= 2){
+			  elm.css('display','');
+			  elm.width( (this.options.totalWidth -15) / 3 );
+			  elm.height(elm.width() * 0.75);
+		  }else if(i == 3){
+			  elm.css('display','');
+			  elm.width( this.options.totalWidth -10 );
+			  elm.height(elm.width() * 0.25);
+		  }else if(i <= 6){
+			  elm.css('display','');
+			  elm.width( (this.options.totalWidth -15) / 3 );
+			  elm.height(elm.width() * 0.75);
+		  }else
+			  $(this.options.frameControlIdList[i]).style.display = 'none';
+	  }
+	  this.options.video_layout = "v7";
+  },
+  
+  toggleTo9V : function(){
+	  for ( var i = 0; i < this.options.frameControlIdList.length; i++) {
+		  var elmId = this.options.frameControlIdList[i];
+		  var elm = $j("#" + elmId);
+
+		  if(i <= 8){
+			  elm.css('display','');
+			  elm.width( (this.options.totalWidth -15) / 3 );
+			  elm.height(elm.width() * 0.75);
+		  }else
+			  $(this.options.frameControlIdList[i]).style.display = 'none';
+	  }
+	  this.options.video_layout = "v9";
+  },
+  
+  navToCamOnMap : function(index){
+	  var cameraCode = this.options.cameraIds[index+1];
+	  var cameraId = this.options.mapCamCodeToId[cameraCode];
+	  
+	  if(!cameraCode || !cameraId)
+		  return;
+	  var data = $j('#cam_'+cameraId).data();
+	  if(!data)
+	  	return;
+	  
+	  var posX = data.posX, posY = data.posY, cameraName = data.cameraName;
+	  if(!posX || !posY)
+		  return;
+	  //var _mapApp = window.mapFrame.navToCamera(cameraCode,cameraName,posX,posY);
+	  var _mapApp = window.mapFrame.navToCamera(data);
+  },
+  
+  openIpsanSaveWindow : function(){
+	  var frameNum = this.getSelectedFrameNum();
+	  if (!frameNum)
+		  return;
+	  var cameraId = this._getSelectedCameraId();
+	  if (!cameraId)
+		  return;
+	  $j("#saveVideoDiv").show();
+	  
+	  $j("#videoCameraCode").val(cameraId);
+	  var startTime = this.options.playRecordStartTime[frameNum];
+	  var endTime = this.options.playRecordEndTime[frameNum];
+	  $j("#videoStartTime").val(startTime);
+	  $j("#videoEndTime").val(endTime);
+  },
+  
+  openLocalSaveWindow : function(){
+  	var frameNum = this.getSelectedFrameNum();
+	  if (!frameNum)
+		  return;
+	  var cameraId = this._getSelectedCameraId();
+	  if (!cameraId)
+		  return;
+	  $j("#localSaveDiv").show();
+	  
+	  $j("#localCameraCode").val(cameraId);
+	  var startTime = this.options.playRecordStartTime[frameNum];
+	  var endTime = this.options.playRecordEndTime[frameNum];
+	  $j("#localStartTime").val(startTime);
+	  $j("#localEndTime").val(endTime);
+  },
+  
+  startIpsanSave : function(){
+	  var cameraCode = $j("#videoCameraCode").val();
+	  var startTime = $j("#videoStartTime").val();
+	  var endTime = $j("#videoEndTime").val();
+	  var fileName = $j("#videoFileName").val();
+	  
+	  //var frameNum = this.getSelectedFrameNum();
+	  //this.options.elm.IMOSAX_StopReplay(frameNum);
+	  
+	  stdPage.buildAjax().setObjectName("SctLogTypicalVideo").setObjectEvent("BizAction")
+		.addParam("_bizActionId","startDownloadVideo").addParam("cameraCode",cameraCode)
+		.addParam("videoStartTime",startTime).addParam("videoEndTime",endTime)
+		.addParam("fileName",fileName)
+		.callRemote(function(){alert('启动录像存储成功!');$j('#saveVideoDiv').hide()});
+  },
+  
+  startLocalSave : function(downloadId,downloadDeptId,downloadTime){
+      var frameNum = this.getSelectedFrameNum();
+      if (!frameNum)
+      	  return; 
+  	  var cameraCode = $j("#localCameraCode").val();
+	  var startTime = $j("#localStartTime").val();
+	  var endTime = $j("#localEndTime").val();
+	  this.options.elm.IMOSAX_StopFrameLive(frameNum);
+	  this.options.elm.IMOSAX_StopReplay(frameNum);
+	  this.options.playStatus[frameNum] = '';
+	  
+	  //修改录像下载接口IMOSAX_StartDownMediaStream -->IMOSAX_StartDownMediaStreamII
+	  var ret = this.options.elm.IMOSAX_StartDownMediaStreamII(cameraCode,startTime,endTime);
+	  var message = ret != 0 ? "启动本地下载成功" : "下载失败,错误码：" + ret + "-->" + this.options.errCode[ret + ""];
+	  alert(message);
+	  this.options.elm.IMOSAX_startFrameLive(frameNum,cameraCode);
+	  this.options.elm.IMOSAX_StartVodReplayII(frameNum,cameraCode,startTime,endTime);
+	  var date1 = parseDate(startTime);
+	  var date2 = parseDate(endTime);
+	  var totalTime = (date2 - date1) / (1000*60*60);
+	  //生成下载日志
+      stdPage.buildAjax().setObjectName("SctLogVideoDownload").setObjectEvent("Add")
+      	.addParam("cameraCode",cameraCode).addParam("downloadId",downloadId)
+        .addParam("downloadDeptId",downloadDeptId).addParam("downloadTime",downloadTime)
+      	.addParam("videoStartTime",startTime).addParam("videoEndTime",endTime).addParam('remark',totalTime)
+      	.addParam("downloadStatus",ret).callRemote(function(){
+      		alert('启动录像存储成功!');
+      		$j('#localSaveDiv').hide();
+      	});
+  },  
+  
+  changeAngle : function() {
+    var frameNum = this.getSelectedFrameNum();
+	if (!frameNum)
+	  return;
+	var cameraCode = this._getSelectedCameraId();
+	if (!cameraCode)
+	  return;
+  	stdPage.popBizActionWin({
+  		'objectName':'SctCameraInfo',
+  		'eventArgs':{'cameraCode':cameraCode},
+  		'bizActionId':'changeAngle',
+  		'callbackFunc':function(){alert('修正成功');}
+  	});
+  },
+  //开始语音对讲
+  startVoiceTalk : function() {
+  	var cameraCode = this._getSelectedCameraId();
+	if (!cameraCode)
+	  return; 
+	var ret = this.options.elm.IMOSAX_StartVoiceTalk(cameraCode);
+	var message = ret == 0 ? "语音通话成功" : "语音通话失败,错误码：" + ret + "-->" + this.options.errCode[ret + ""];
+	alert(message);
+	if(ret == 0){
+		$j("#ctrl_startVoiceTalk").css('display','none');
+		$j("#ctrl_stopVoiceTalk").css('display','block');
+	}
+  },
+  
+  stopVoiceTalk : function() {
+  	var ret = this.options.elm.IMOSAX_StopVoiceTalk();
+  	var message = ret == 0 ? "停止通话成功" : "停止通话失败,错误码：" + ret + "-->" + this.options.errCode[ret + ""];
+	alert(message);
+	if(ret == 0){
+		$j("#ctrl_startVoiceTalk").css('display','block');
+		$j("#ctrl_stopVoiceTalk").css('display','none');
+	}
+  }
+
+};
+Object.extend(VideoControl.prototype, VideoControl._temp);
+
+function Timer(func,internal,init){
+	var timerId = null, startTime = new Date(), delay = internal;
+	
+	var f = function(){
+		func();
+		startTime = new Date();
+		delay = internal;
+		timerId = window.setTimeout(f,delay);
+	};
+	
+	this.pause = function(){
+		if(!timerId)
+			return;
+		window.clearTimeout(timerId);
+		timerId = null;
+		delay -= (new Date() - startTime);
+		if(delay <= 0)
+			delay = internal;
+	};
+	
+	this.resume = function(){
+		if(timerId)
+			return;
+		startTime = new Date();
+		timerId = window.setTimeout(f,delay);
+	};
+	
+	this.switchNext = function(){
+		if(timerId)
+			window.clearTimeout(timerId);
+		func();
+		startTime = new Date();
+		delay = internal;
+		timerId = window.setTimeout(f,internal);
+	};
+	
+	if(init)
+		func();
+	this.resume();
+}
+
+function getCookie(name){
+	var value = "";
+	var search = name + "=";
+	if(document.cookie.length > 0){ 
+		var offset = document.cookie.indexOf(search);
+	    if (offset != -1){ 
+	      offset += search.length;
+	      var end = document.cookie.indexOf(";", offset);
+	      if (end == -1) 
+	    	  end = document.cookie.length;
+	      value = unescape(document.cookie.substring(offset, end));
+	    }
+	}
+	return value;
+}
+
+function parseDate(str){
+	return js.date.fromString(str);
+	/*
+	var year = str.substring(0,4);
+	var month = parseInt(str.substring(5,7)) - 1;
+	var day = str.substring(8,10);
+	var hour = str.substring(11,13);
+	var min = str.substring(14,16);
+	var sec = str.substring(17,19);
+	
+	return new Date(year,month,day,hour,min,sec);
+	*/
+}
+
+function formatDate(date){
+	return js.date.toFormatString(date,"yyyy-MM-dd hh:mm:ss");
+	/*
+	var year = date.getFullYear();
+	var month = date.getMonth() + 1;
+	month = month < 10 ? "0"+month : month;
+	var day = date.getDate();
+	day = day < 10 ? "0"+day : day;
+	var hour = date.getHours();  
+    hour = hour < 10 ? "0"+hour : hour;
+    var m = date.getMinutes();  
+    m = (m<10) ? "0"+m : m;  
+    var s = date.getSeconds();  
+    s = (s<10) ? "0"+s : s; 
+	return year + ":" + month + ":" + day + " " + hour + ":" + m + ":" + s;
+	*/
+}
+
+function sleep(milliSeconds){    
+    var startTime = new Date().getTime();   
+    while (new Date().getTime() < startTime + milliSeconds);  
+}

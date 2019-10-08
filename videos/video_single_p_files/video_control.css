@@ -1,0 +1,423 @@
+table{
+	text-align:center;
+	background-color:#0075A9;
+	border:1px solid #185F82;
+}
+
+tr,td{
+    text-align:center;
+}
+
+object.video_frame {
+    float:left;
+    width:350px;
+    height:260px; 
+    margin-right:1px;
+    margin-bottom:1px;
+}
+
+#frameContainer{
+	margin:0px;border:0px;
+	padding-left:5px;  
+	position:positive;top:0px;
+}
+
+#ctrl_panel{
+	width:210px; 
+	background-color:#DEEFF9;
+	background:url(_img/ctrl_panel.png);	
+	border:1px solid #B6C1C7;
+	padding:2px;
+	position:relative;
+	height:260px;
+}
+
+#ctrl_map{
+    position:relative;
+}
+
+#ctrl_panel img{
+  left:5px;
+  position:absolute;
+}
+
+#ctrl_panel input.control{
+	margin:2px; 
+	border:0;
+	position:absolute;
+}
+
+#ctrl_panel div.buttonsContainer{
+	margin-top:140px;
+}
+
+#ctrl_panel input.control2{
+	margin:6px; 
+	border:0;
+	float:left;
+}
+
+#ctrl_add{
+	background:url(_img/ctrl_add_n.png) no-repeat;
+	top:10px;
+	right:40px;
+	width:21px;
+	height:23px;
+	cursor:pointer;
+}
+
+#ctrl_minus{
+	background:url(_img/ctrl_minus_n.png) no-repeat;
+	top:10px;
+	right:10px;
+	width:21px;
+	height:23px;
+	cursor:pointer;
+}
+
+#ctrl_shuoding{
+	background:url(_img/ctrl_shuoding_n.png) no-repeat;
+	top:50px;
+	right:38px;
+	width:21px;
+	height:23px;
+	cursor:pointer;
+}
+
+#ctrl_jieshuo{
+	background:url(_img/ctrl_jieshuo_n.png) no-repeat;
+	top:50px;
+	right:8px;
+	width:21px;
+	height:23px;
+	cursor:pointer;
+}
+
+#ctrl_yuzhiwei{
+	background:url(_img/ctrl_yuzhiwei_n.png) no-repeat;
+	bottom:95px;
+	left:14px;
+	width:28px;
+	height:26px;
+	cursor:pointer;
+}
+
+#ctrl_1video{
+	background:url(_img/ctrl_1v_n.png) no-repeat;
+	bottom:95px;
+	left:50px;
+	width:28px;
+	height:26px;
+	cursor:pointer;
+}
+
+#ctrl_4video{
+	background:url(_img/ctrl_4v_n.png) no-repeat;
+	bottom:95px;
+	left:50px;
+	width:28px;
+	height:26px;
+	cursor:pointer;
+}
+
+#ctrl_6video{
+	background:url(_img/ctrl_6v_n.png) no-repeat;
+	bottom:95px;
+	left:86px;
+	width:28px;
+	height:26px;
+	cursor:pointer;
+}
+
+#ctrl_7video{
+	background:url(_img/ctrl_7v_n.png) no-repeat;
+	bottom:95px;
+	left:122px;
+	width:28px;
+	height:26px;
+	cursor:pointer;
+}
+
+#ctrl_9video{
+	background:url(_img/ctrl_9v_n.png) no-repeat;
+	bottom:95px;
+	left:158px;
+	width:28px;
+	height:26px;
+	cursor:pointer;
+}
+
+#ctrl_fullscreen{
+	background:url(_img/ctrl_fullscreen_n.png) no-repeat;
+	bottom:21px;
+	left:14px;
+	width:28px;
+	height:26px;
+	cursor:pointer;
+}
+
+
+#ctrl_lunxun{
+	background:url(_img/ctrl_lunxun_start_n.png) no-repeat;
+	bottom:58px;
+	left:14px;
+	width:28px;
+	height:26px;
+	cursor:pointer;
+}
+
+#ctrl_pauseLunxun{
+	background:url(_img/ctrl_lunxun_pause_n.png) no-repeat;
+	bottom:58px;
+	left:50px;
+	width:28px;
+	height:26px;
+	cursor:pointer;
+	display:block;
+}
+
+#ctrl_resumeLunxun{
+	background:url(_img/ctrl_lunxun_resume_n.png) no-repeat;
+	width:28px;
+	height:26px;
+	cursor:pointer;
+	display:none;
+}
+
+#ctrl_switchLunxun{
+	background:url(_img/ctrl_lunxun_next_n.png) no-repeat;
+	bottom:58px;
+	left:122px;
+	width:28px;
+	height:26px;
+	cursor:pointer;
+}
+
+#ctrl_setLunxunParams{
+	background:url(_img/ctrl_lunxun_time_n.png) no-repeat;
+	bottom:58px;
+	left:158px;
+	width:28px;
+	height:26px;
+	cursor:pointer;
+}
+
+#lunxunParamsWin{
+	display:none;
+	position:absolute;
+	left:20px;top:110px;
+	width:140px;height:60px;
+	background-color:#F1F4F9;
+	border:2px solid #6BC6E5;
+	padding:10px;
+	font-size:13px;
+}
+
+#lunxunParamsWin input.button{
+	float:none;
+	width:60px;height:20px;
+	background:url(_img/ctrl_lunxun_button.png);
+	cursor:pointer;
+	font-size:13px;
+	line-height:20px; 
+	color:white;
+	border:0px;
+}
+
+#lunxunParamsWin #lunxunInterval{
+	float:none;
+	width:30px;height:13px;
+}
+
+#ctrl_startVoiceTalk{
+	background:url(_img/ctrl_start_talk_n.png) no-repeat;
+	width:28px;
+	height:26px;
+	cursor:pointer;
+	display:block;
+}
+
+#ctrl_stopVoiceTalk{
+	background:url(_img/ctrl_stop_talk_n.png) no-repeat;
+	width:28px;
+	height:26px;
+	cursor:pointer;
+	display:none;
+}
+
+#ctrl_recordTime{
+    width:28px;
+    height:20px;
+    display:block;
+}
+
+#ctrl_recordStart{
+    background:url(_img/ctrl_start_record_n.png) no-repeat;
+    width:28px;
+    height:26px;
+    cursor:pointer;
+    display:block;
+}
+
+#ctrl_recordStop{
+    background:url(_img/ctrl_stop_record_n.png) no-repeat;
+    width:28px;
+    height:26px;
+    cursor:pointer;
+    display:none;
+}
+
+#ctrl_zhupai{
+	background:url(_img/ctrl_zhuapai_n-j.png) no-repeat;
+	bottom:21px;
+	left:50px;
+	width:28px;
+	height:26px;
+	cursor:pointer;
+}
+
+#ctrl_stop{
+    background:url(_img/ctrl_stop.png) no-repeat;
+    bottom:21px;
+    left:50px;
+    width:28px;
+    height:26px;
+    cursor:pointer;
+}
+
+#ctrl_record{
+	background:url(_img/ctrl_record_n.png) no-repeat;
+	bottom:21px;
+	left:86px;
+	width:28px;
+	height:26px;
+	cursor:pointer;
+}
+
+#ctrl_sliceup{
+	background:url(_img/ctrl_sliceup.png) no-repeat;
+}
+
+#ctrl_shangbao{
+	background:url(_img/ctrl_shangbao_n.png) no-repeat;
+	top:90px;
+	right:38px;
+	width:21px;
+	height:23px;
+	cursor:pointer;
+}
+
+#ctrl_savevideo{
+	background:url(_img/ctrl_savevideo_n.png) no-repeat;
+	bottom:21px;
+	left:122px;
+	width:28px;
+	height:26px;
+	cursor:pointer;
+}
+
+
+#ctrl_config{
+	background:url(_img/ctrl_config_n.png) no-repeat;
+	top:90px;
+	right:8px;
+	width:21px;
+	height:23px;
+	cursor:pointer;
+}
+
+#configParamWin{
+	display:none; 
+	position:absolute;
+	left:5px;top:50px;
+	width:180px;height:260px;
+	background-color:#F1F4F9;
+	border:2px solid #6BC6E5;
+	padding:2px;
+	font-size:13px;
+}
+
+#configParamWin span{ 
+	float:left;
+	line-height:20px;
+	font-size:13px;
+}
+
+#configParamWin input{
+	float:left;
+}
+
+#configParamWin input.path{
+	font-size:13px;
+	line-height:18px;
+	padding:0;margin:0;
+	padding-left:3px;
+	width:30px;height:20px;
+} 
+
+
+#configParamWin input.button{
+	float:none;
+	width:60px;height:20px;
+	border:0px;
+	background:url(_img/ctrl_lunxun_button.png);
+	cursor:pointer;
+	font-size:13px;
+	line-height:20px;
+	color:white;
+}
+
+
+
+/** start mini map **/
+#miniMap{ 
+	width:210px;height:260px; 
+	background-color:#DEEFF9;	
+	border:1px solid #B6C1C7;
+	margin-top:5px;
+	padding:2px;
+}
+
+#mapFrame{
+	width:100%;height:100%;
+}
+/** end mini map **/
+
+/** slice record **/
+#sliceResultDiv{
+	display:none;
+	margin:10px;
+}
+
+#sliceResult img{
+	width:240px;
+	height:160px;
+	float:left;
+	margin:2px;
+}
+#ctrl_guard{
+    background:url(_img/ctl_guard.png) no-repeat;
+    bottom:95px;
+    left:122px;
+    width:28px;
+    height:26px;
+    cursor:pointer;
+}
+
+#ctrl_addPreset{
+    background:url(_img/ctrl_add_preset_n.png) no-repeat;
+    bottom:95px;
+    left:122px;
+    width:28px;
+    height:26px;
+    cursor:pointer;
+}
+
+#ctrl_savePreset{
+    background:url(_img/ctrl_save_preset_n.png) no-repeat;
+    bottom:95px;
+    left:158px;
+    width:28px;
+    height:26px;
+    cursor:pointer;
+}

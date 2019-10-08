@@ -1,0 +1,51 @@
+<!-- {% if site.disqus_shortname %}
+    <script type="text/javascript">
+        var disqus_shortname = '{{ site.disqus_shortname }}';
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+        (function () {
+            var s = document.createElement('script'); s.async = true;
+            s.type = 'text/javascript';
+            s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+            (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+        }());
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+{% endif %} -->
+<!-- <div id="gitmentContainer"></div>
+<link rel="stylesheet" href="https://billts.site/extra_css/gitment.css">
+<script src="https://billts.site/js/gitment.js"></script>
+
+<script>
+    var gitment = new Gitment({
+        owner: 'shengchangwei',
+        repo: 'gitment',
+        oauth: {
+            client_id: 'be91b36f62ef2ed9df61',
+            client_secret: '07ab4a70b65933368d9a5ceced37381936db9e97',
+        },
+    });
+
+    gitment.render('gitmentContainer');
+</script> -->
+
+
+
+<div id="lv-container" data-id="city" data-uid="{{ site.livere_uid }}"></div>
+<script type="text/javascript">
+    (function (d, s) {
+        var j, e = d.getElementsByTagName(s)[0];
+
+        if (typeof LivereTower === 'function') { return; }
+
+        j = d.createElement(s);
+        j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+        j.async = true;
+
+        e.parentNode.insertBefore(j, e);
+    })(document, 'script');
+</script>
+<!-- <noscript> 为正常使用来必力评论功能请激活JavaScript</noscript> -->

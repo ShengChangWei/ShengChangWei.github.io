@@ -1,0 +1,2552 @@
+var js;
+if (!js)
+  js = {};
+
+js.StdPage = js.Class.create();
+js.extend(js.extend(js.StdPage.prototype, js.AjaxBase.prototype), {
+  initialize : function(options) {
+    this.params = {};
+    this.options = {
+      loadingPane : new js.SubmitPane('ajax-submit-pane'),
+      pagePopAdd : '/std/entity/pop_add.jsp?',
+      pagePopUpdate : '/std/entity/pop_update.jsp?',
+      pagePopView : '/std/entity/pop_view.jsp?',
+      pageExportCsv : '/std/entity/export_csv.jsp?',
+      pageExport : '/std/entity/export.jsp?',
+      pageImport : '/std/entity/import.jsp?',
+      pageTreeView : '/std/entity_tree/view.jsp?',
+      pageAdd : '/web_engine.jsp?',
+      pageView : '/web_engine.jsp?',
+      pageUpdate : '/web_engine.jsp?',
+      pageList : '/web_engine.jsp?',
+      pageMapping : '/web_engine.jsp?',
+      pageRelation : '/web_engine.jsp?',
+      pageMore : '/std/entity/more_relation.jsp?',
+      pageDialog : '/std/entity/pop_dialog.jsp?',
+      pageJsonRef : '/std/entity/json_ref.jsp?',
+      pageQueryBuilder : '/std/entity/query_builder.jsp?',
+      pageQueryParam : '/std/entity/query_param.jsp?',
+      pageBatchUpdate : '/std/entity/batch_update.jsp?',
+      pageBatchAdd : '/std/entity/batch_add.jsp?',
+      pagePopBatchAdd : '/std/entity/pop_batch_add.jsp?',
+      pagePopBatchUpdate : '/std/entity/pop_batch_update.jsp?',
+      pageDynamicLoad : '/std/entity/list_options.jsp?',
+      pageViewNewlyAdd : '/std/entity/list.jsp?$bizId=viewNewlyAdd',
+      pageConfigListFields : '/std/entity/config_list_fields.jsp?',
+      pageConfigCheckboxListFields : '/std/entity/config_checkbox_list_fields.jsp?',
+      pageAjaxRelation : '/std/entity/ajax_relation.jsp?',
+      pageListOptions : '/std/entity/list_options.jsp?',
+      pageTplView : '/std/entity/tpl_view.jsp?',
+      pageExportWml : '/std/entity/export_wml.jsp?',
+      pageRenderOut : '/std/entity/render_out.jsp?',
+      pageLookup : '/_tpl/app/select_one/lookup_win.jsp?',
+      pageSelectMulti : '/_tpl/app/select_multi/lookup_win.jsp?',
+      pageRenderHtml : '/std/entity/render_html.jsp?',
+      pageDownload : '/std/entity/download.jsp?',
+      pageReportHtml : '/std/entity/report_html.jsp?',
+      pageShow : '/std/entity/show.jsp?',
+      pageRows : '/std/entity/rows.jsp?',
+      pageEditDoc : '/std/web_office/edit_doc.jsp?',
+      compassPage : '/std/compass/index.jsp?',
+      pageTreeRoot:'/std/wo/page_tree_root.jsp?',
+	  pageTreeChildren:'/std/wo/page_tree_children.jsp?',
+      frmAdd : 'frmAdd',
+      frmUpdate : 'frmUpdate',
+      frmList : 'frmList',
+      frmMapping : 'frmMapping',
+      dlgAddOk : new js.SubmitPane('ajax-add-ok'),
+      persistParams : [],
+      keepAddFields : [],
+      keepUpdateFields : [],
+      keepFields : [],
+      cryptFields : [],
+      rowParams : {},
+      autoCloseAfterSubmit : false,
+      pullMode : true
+    };
+    options = options || {};
+    if (this.options.pullMode) {
+      this.options.pageAdd = '/std/entity/add.jsp?';
+      this.options.pageView = '/std/entity/view.jsp?';
+      this.options.pageUpdate = '/std/entity/update.jsp?';
+      this.options.pageList = '/std/entity/list.jsp?';
+      this.options.pageMapping = '/std/entity/update_mapping.jsp?';
+      this.options.pageRelation = '/std/entity/view_relation.jsp?';
+      this.options.pageOneRelation = '/std/entity/view_one_relation.jsp?';
+    }
+    this.options.pageStdList = this.options.pageList;
+    this.options = js.extend(this.options, options);
+    if (this.isLdMode())
+      this.options.pageList = '/std/entity/ld_list.tsp?';
+
+    this.addNum = 0;
+    this.renameFields = {};
+    this.loaders = {};
+
+    var me = this;
+    window.get_props = function(propKeys) {
+      return me.getProps(propKeys);
+    };
+
+    window.set_props = function(props) {
+      me.setProps(props);
+    };
+
+    if (this.getPersistParam('$ops') != null && this.getPersistParam('$ops').indexOf('s') >= 0) {
+      this.options.pageList = '/_tpl/app/select_one/lookup_win.jsp?';
+      this.submitAdd = this.submitAddThenView;
+    }
+
+    this.slaveNames = [];
+    this.notEmptyConds = [];
+  },
+
+  getApp : function() {
+    return window.top.wxApp;
+  },
+
+  addSlave : function(relationName) {
+    this.slaveNames.push(relationName);
+  },
+
+  openSqlSateWin : function(bizId, objectName) {
+
+    var params = {
+      objectEvent : 'QuerySql',
+      '$sqlName' : "stat." + bizId,
+      '$bizId' : bizId,
+      current : true
+    };
+    var url = this.buildTopUrl('/std/entity/list.jsp?', params, objectName);
+    return js.win.open(url);
+  },
+
+  markModifiedFields : function(modifedElms) {
+    if (!modifiedElms)
+      return;
+
+    var n = modifedElms.length;
+    var i = 0;
+    for (i = 0; i < n; i++) {
+      var field = modifedElms[i];
+      var td = this.getFieldTd(field);
+      if (td)
+        js.addClassName(td, "modifiedField");
+    }
+  },
+  isLdMode : function() {
+    return window.std_ld_frame != null || (this.getPersistParam('$ld') == 'true' && window.parent.std_ld_frame);
+  },
+
+  navToSubPage : function(url, pageName) {
+    var win = window;
+    if(pageName == 'pageView' || pageName == 'pageUpdate'){
+      if(window.std_ld_frame != null){
+        win = window.std_ld_frame;
+      }
+    }
+    win.location = url;
+    this.onNavToSubPage(url, pageName);
+  },
+
+  onNavToSubPage : function(url, pageName) {
+  },
+
+  buildTplViewAjax : function(selector, objectName, eventArgs) {
+    return this.buildAjax(objectName, eventArgs).setUrl(js.CONTEXT_PATH + this.options['pageTplView']).setObjectEvent('None').addParam('_tplSelector', selector);
+  },
+
+  buildShowUrl : function(selector, params, objectName) {
+    var url = this.buildUrl('pageShow', Object.extend({
+      '$tplSelector' : selector
+    }, params || {}), objectName);
+    return url;
+  },
+
+  buildRelationAjax : function(pkValue, relation) {
+    return this.buildAjax().setUrl(js.CONTEXT_PATH + this.options['pageAjaxRelation']).setObjectEvent('ViewRelation').addParam('id', pkValue).addParam('relation', relation);
+  },
+
+  validateBeforeUpdate : function(pkValue) {
+    return true;
+  },
+
+  validateBeforeAdd : function() {
+    return true;
+  },
+
+  validateBeforeBatchAdd : function() {
+    return true;
+  },
+
+  validateBeforeBatchUpdate : function() {
+    return true;
+  },
+  
+  disableAlertWhenSwitchPage : function(){
+    this.alertWhenClose = false;
+  },
+
+  popSubmitUpdate : function(pkValue, objectEvent) {
+    if (!this.validateBeforeUpdate(pkValue))
+      return;
+
+    var ret = this.buildAjax().setObjectEvent(objectEvent || 'Update')
+    			.addForm(this.options.frmUpdate)
+    			.addParam(this.options.pkField,pkValue)
+    			.callRemote(this.invokePopUpdateCallback.bind(this));
+  },
+
+  popSubmitAdd : function(frmId) {
+    if (!this.validateBeforeAdd())
+      return;
+
+    var ret = this.buildAjax().setObjectEvent('Add').addForm(frmId || this.options.frmAdd).callRemote(this.invokePopAddCallback.bind(this));
+  },
+
+  submitBizAction : function(objectEvent, eventArgs, frmId, callbackFunc) {
+    this.buildAjax().setObjectEvent(objectEvent).addForm(frmId).callRemote(callbackFunc);
+  },
+
+  submitUpdate : function(pkValue, listType) {
+    if (!this.validateBeforeUpdate(pkValue))
+      return;
+
+    var ret = this.buildAjax().setObjectEvent('Update')
+    			.addForm(this.options.frmUpdate)
+    			.addParam(this.options.pkField,pkValue)
+    			.callRemote(this.invokeUpdateCallback.bind(this, pkValue, listType));
+  },
+
+  submitAdd : function(frmId) {
+    if (!this.validateBeforeAdd())
+      return;
+
+    var ret = this.buildAjax().setObjectEvent('Add').addForm(frmId || this.options.frmAdd).callRemote(this.invokeAddCallback.bind(this));
+  },
+
+  submitAddThenView : function(frmId) {
+    if (!this.validateBeforeAdd())
+      return;
+    
+    this.disableAlertWhenSwitchPage();
+    var ret = this.buildAjax().setObjectEvent('Add').addForm(frmId || this.options.frmAdd).callRemote(this.gotoViewPage.bind(this));
+  },
+
+  gobackFromUpdate : function() {
+    if(js.get_pop_dialog_id()){
+    	js.invoke_pop_dialog_ok();
+    	return;
+    }
+    return this.goback();
+  },
+
+  goback : function() {
+    if (!window.history.length) {
+      this.gotoListPage();
+    } else {
+      window.history.go(-1);
+    }
+  },
+
+  invokeAddCallback : function(pkValue) {
+    this.disableAlertWhenSwitchPage();
+    this.showAddNextWin(pkValue);
+  },
+
+  showAddNextWin : function(pkValue) {
+    this.newPkValue = pkValue;
+    this.options.dlgAddOk.show();
+  },
+
+  invokeUpdateCallback : function(pkValue, listType) {
+    this.disableAlertWhenSwitchPage();
+    if (listType == 'BatchUpdate')
+      return this.gotoBatchUpdatePage();
+    js.defer(this.gotoViewPage,this,pkValue);
+  },
+
+  addNextNew : function(result) {
+    // info do not reset for fast add
+    // $(this.options.frmAdd).reset();
+    js.form.resetFileElements(this.options.frmAdd);
+    this.options.dlgAddOk.hide();
+    this.addNum++;
+  },
+
+  confirmAdd : function() {
+    this.disableAlertWhenSwitchPage();
+    if (this.isLdMode()) {
+      this.gotoViewPage(this.newPkValue);
+      window.parent.stdPage.refreshList();
+    } else {
+      this.requeryListPage();
+    }
+  },
+
+  invokePopCallback : function(result, idx) {
+    if (this.submitting)
+      return;
+    this.submitting = true;
+    js.win.invokeCallback(result, idx);
+    
+    this.disableAlertWhenSwitchPage();
+    
+    this.closeTopWin();
+    this.submitting = false;
+    return true;
+  },
+
+  invokeCancelCallback : function() {
+    this.invokePopCallback(null, 1);
+  },
+
+  popDialog : function(eventArgs, layoutName, callbackFunc, cancelFunc) {
+    var url = this.buildTopUrl('pageDialog', eventArgs) + "&_layoutName=" + layoutName;
+    js.win.dialog(url, [ callbackFunc, cancelFunc ]);
+  },
+
+  popBatchAddWin : function(objectName, eventArgs) {
+    eventArgs = Object.extend({
+      objectEvent : 'PreAdd'
+    }, eventArgs || {});
+    var url = this.buildTopUrl('pagePopBatchAdd', eventArgs, objectName);
+    js.win.dialog(url, [ this.refreshPage.bind(this) ]);
+  },
+
+  popSlaveBatchAddWin : function(objectName, eventArgs, jsTable) {
+    eventArgs = Object.extend({
+      objectEvent : 'PreAdd'
+    }, eventArgs || {});
+    var url = this.buildTopUrl('pagePopBatchAdd', eventArgs, objectName);
+    js.win.dialog(url, [ this.refreshSlavePage.bind(this, jsTable) ]);
+  },
+
+  refreshSlavePage : function(jsTable) {
+    window.setTimeout(function() {
+      jsTable.initTable();
+    }, 10);
+  },
+  
+  batchAddSlave: function(relationTbl,parentId,parentField,subFld,retValue){
+	  var subIds = $A(retValue).pluck('value');
+		if(!subIds || subIds.length == 0)
+			return ;
+	  
+	  var tbl = relationTbl;
+	  this.buildAjax(tbl.options.objectName,{objectEvent:'BatchCUD'})
+			  .addParam(parentField,parentId)
+			  .addParamList(subFld,subIds)
+				.callRemote(this.refreshSlavePage.bind(this,tbl));
+  },
+  
+  
+
+  popBatchUpdateWin : function(objectName, eventArgs) {
+    eventArgs = Object.extend({
+      objectEvent : 'Query',
+      noRequery : true
+    }, eventArgs || {});
+    var url = this.buildTopUrl('pagePopBatchUpdate', eventArgs, objectName);
+    js.win.dialog(url, [ this.refreshPage.bind(this) ]);
+  },
+
+  batchAddRefObjs : function(objectName, layoutName, refField) {
+    if (!js.form.hasSelected(this.options.pkField, $(this.options.frmList))) {
+      alert(form_G.MSG_NO_SELECTION);
+      return false;
+    }
+    var url = this.buildUrl('pageDialog', {
+      _layoutName : layoutName,
+      objectEvent : 'PreAdd'
+    }, objectName);
+    js.win.dialog(url, [ function(vars) {
+      vars[refField] = js.form.getSelectedValues(this.options.pkField, $(this.options.frmList));
+      stdPage.buildAjax(objectName).setObjectEvent('BatchAdd').addParamsMap(vars).callRemote(this.refreshPage.bind(this));
+    }.bind(this) ]);
+  },
+
+  invokeDialogCallback : function(frmId) {
+    frmId = frmId || 'frmDialog';
+    if (!js.validate.validForm(frmId))
+      return false;
+    var m = new js.Ajax().addForm(frmId, true).getParamsAsMap();
+    return this.invokePopCallback(m, 0);
+  },
+
+  invokePopUpdateCallback : function(result) {
+    if (window.top.ext && window.top.ext[0]) {
+      if (window.top.ext[0].onUpdateOk) {
+        window.top.ext[0].onUpdateOk(result);
+      } else {
+        window.top.ext[0](result);
+      }
+    }
+    
+    this.disableAlertWhenSwitchPage();
+    // if(this.options.autoCloseAfterSubmit)
+    this.closeTopWin();
+  },
+
+  enablePopAddNext : function() {
+    this.confirmAdd = this.callbackForPopAdd;
+    this.invokePopAddCallback = this.invokeAddCallback;
+  },
+
+  invokePopAddCallback : function(result) {
+    this.callbackForPopAdd(result);
+  },
+
+  callbackForPopAdd : function(result) {
+    js.win.invokeCallback(result);
+    this.disableAlertWhenSwitchPage();
+    // if(this.options.autoCloseAfterSubmit)
+    this.closeTopWin();
+  },
+
+  callbackForAdd : function() {
+    this.disableAlertWhenSwitchPage();
+    this.gotoListPage();
+  },
+
+  callbackForPopTree:function(pkValue){
+    window.parent.leftFrame.location = window.parent.leftFrame.location;
+ 	window.parent.gotoTarget(pkValue);
+  },
+  callbackForUpdate : function(pkValue, listType) {
+    this.disableAlertWhenSwitchPage();
+    if (listType == 'BatchUpdate')
+      return this.gotoBatchUpdatePage();
+    this.gotoViewPage(pkValue);
+  },
+
+  callbackForRemove : function() {
+    this.disableAlertWhenSwitchPage();
+    if (this.isLdMode()) {
+      window.parent.stdPage.refreshList();
+      window.location = js.CONTEXT_PATH + '/blank.html';
+    } else {
+      this.gotoListPage();
+    }
+  },
+
+  callbackForRecoverRemoved : function() {
+    this.disableAlertWhenSwitchPage();
+    this.gotoListPage();
+  },
+
+  cancelPopAddWin : function() {
+    if (!js.form.hasChanged("frmAdd"))
+      std_alertWhenClose = false;
+    if (this.addNum >= 1) {
+      this.callbackForPopAdd();
+    }
+    js.win.close();
+  },
+
+  closeTopWin : function() {
+    js.win.close();
+  },
+
+  refreshTopOpener : function() {
+    js.win.refreshTopOpener();
+  },
+
+  popAddWin : function(callbackFunc, eventArgs, objectName) {
+    var url = this.buildTopUrl('pagePopAdd', eventArgs, objectName) + "&objectEvent=PreAdd";
+    js.win.dialog(url, [ callbackFunc || this.callbackForAdd.bind(this) ]);
+  },
+
+  popUpdateWin : function(pkValue, callbackFunc) {
+    var args = {
+      objectEvent : 'PreUpdate'
+    };
+    args[this.options.pkField] = pkValue;
+    var url = this.buildTopUrl('pagePopUpdate') + "&" + $H(args).toQueryString();
+    js.win.dialog(url, [ callbackFunc || this.callbackForUpdate.bind(this, pkValue) ]);
+  },
+
+  popViewWin : function(pkValue, allowUpdate, objectName) {
+    var args = {
+      objectEvent : 'ViewDetail'
+    };
+    args[this.options.pkField] = pkValue;
+    if (allowUpdate)
+      args["allowUpdate"] = allowUpdate;
+
+    var url = this.buildTopUrl('pagePopView', null, objectName) + "&" + $H(args).toQueryString();
+    js.win.dialog(url);
+  },
+
+  popQueryBuilderWin : function() {
+    var url = this.buildTopUrl('pageQueryBuilder') + "&objectEvent=PrefGetQueryList";
+    js.win.dialog(url, [ this.callbackForQueryBuilder.bind(this) ]);
+  },
+
+  callbackForQueryBuilder : function(cmd) {
+    window.setTimeout(function() {
+      if (cmd) {
+        this.queryCommand(cmd);
+      } else {
+        this.gotoListPage();
+      }
+    }.bind(this), 10);
+  },
+
+  queryByPrefOption : function(prefOption) {
+    var prefQueryId = prefOption.value;
+    if (!prefQueryId)
+      return;
+    var inComplete = prefOption.getAttribute('complete') == 'false';
+    var custom = prefOption.getAttribute('custom') == 'true';
+    if (!custom)
+      return this.queryById(prefQueryId);
+    if (inComplete) {
+      // var url = this.buildTopUrl('pageQueryParam') +
+      // "&objectEvent=PrefGetQuery&prefQueryId="+encodeURIComponent(prefQueryId);
+      // js.win.dialog(url,[this.queryPref.bind(this,prefQueryId)]);
+      var url = this.buildTopUrl('pageQueryBuilder') + "&objectEvent=PrefGetQuery&prefQueryId=" + encodeURIComponent(prefQueryId);
+      js.win.dialog(url, [ this.callbackForQueryBuilder.bind(this) ]);
+    } else {
+      this.queryPref(prefQueryId);
+    }
+  },
+
+  syncPrefList : function(prefList) {
+    var opts = $('prefQueryList').options;
+    var i, n = opts.length;
+    for (i = 0; i < n; i++) {
+      if (opts[i].getAttribute('custom') == 'true') {
+        opts[i] = null;
+        i--;
+        n--;
+      }
+    }
+    prefList.each(function(prefQueryId) {
+      opts.add(new Option(prefQueryId, prefQueryId));
+    });
+  },
+
+  queryPref : function(prefQueryId, prefArgs) {
+    var url = this.buildUrl('pageList', prefArgs);
+    url += "&objectEvent=Query&prefQueryId=" + encodeURIComponent(prefQueryId);
+    window.location = url;
+  },
+
+  gotoPopUpdatePage : function(pkValue) {
+    var args = {
+      objectEvent : 'PreUpdate'
+    };
+    args[this.options.pkField] = pkValue;
+    var url = this.buildTopUrl('pagePopUpdate') + "&" + $H(args).toQueryString();
+    window.location = url;
+  },
+
+  queryCommand : function(cmd) {
+    this.buildAjax().setObjectEvent('QueryCommand').addParam('queryCommand', cmd).callRemote(this.gotoListPage.bind(this));
+  },
+
+  queryCommandForListFrame : function(cmd, objectName) {
+    this.buildAjax(objectName).setObjectEvent('QueryCommand').addParam('queryCommand', cmd).callRemote(this.refreshListFrame.bind(this));
+  },
+  
+  refreshList : function(){
+    this.refreshPage();
+  },
+
+  refreshListFrame : function() {
+    var win = window.listFrame || window.parent.listFrame;
+    if (win)
+      win.stdPage.gotoListPage();
+  },
+
+  pageFilter : function(filterField, filterValue, filterOp) {
+    if (!filterOp)
+      filterOp = "";
+    var url = this.buildUrl('pageList',{
+      objectEvent : 'PageFilter',
+      'filterField' : filterField,
+      'filterValue' : filterValue,
+      'filterOp' : filterOp
+    });
+    window.location = url;
+  },
+
+  gotoStdListPage : function() {
+    var listBizId = this.getPersistParam("$list_" + this.options.objectName);
+    var o = this;
+    if (listBizId) {
+      o = this.copy().replacePersistParam("$bizId", listBizId);
+    }
+    var url = o.buildUrl('pageStdList') + "&" + $H({
+      objectEvent : 'Query',
+      noRequery : 'true'
+    }).toQueryString();
+    this.navToSubPage(url, 'pageList');
+  },
+
+  gotoListPage : function() {
+    this.disableAlertWhenSwitchPage();
+    if(js.get_pop_dialog_id()){
+    	js.invoke_pop_dialog_ok();
+    	return;
+    }
+    var listBizId = this.getPersistParam("$list_" + this.options.objectName);
+    var listObjectName;
+    var o = this;
+    if (listBizId) {
+      if (listBizId.indexOf('-') >= 0) {
+        var list = listBizId.split('-');
+        listObjectName = list[0];
+        listBizId = list[1];
+      }
+      o = this.copy().replacePersistParam("$bizId", listBizId);
+    }
+    var url = o.buildUrl('pageList', {
+      objectEvent : 'Query',
+      noRequery : 'true'
+    }, listObjectName);
+    this.navToSubPage(url, 'pageList');
+  },
+
+  query : function(args) {
+    var listBizId = this.getPersistParam("$list_" + this.options.objectName);
+    var o = this;
+    if (listBizId) {
+      o = this.copy().replacePersistParam("$bizId", listBizId);
+    }
+    var url = o.buildUrl('pageList', args);
+    this.navToSubPage(url, 'pageList');
+  },
+
+  gobackToList : function() {
+    if(js.get_pop_dialog_id()){
+    	js.invoke_pop_dialog_ok();
+      return;
+    }
+	var url = this.getPersistParam('$backUrl');
+    if (url) {
+      window.location = url;
+    } else {
+      var listBizId = this.getPersistParam("$list_" + this.options.objectName);
+      var o = this;
+      if (listBizId) {
+        o = this.copy().replacePersistParam("$bizId", listBizId);
+      }
+      var url = o.buildUrl('pageList') + "&" + $H({
+        objectEvent : 'Query',
+        noRequery : 'true'
+      }).toQueryString();
+      this.navToSubPage(url, 'pageList');
+    }
+  },
+
+  gotoPage : function(pageName, eventArgs, objectName) {
+    var url = this.buildUrl(pageName, eventArgs, objectName);
+    this.navToSubPage(url, pageName);
+  },
+
+  gotoEntityPage : function(pageName, id, objectName) {
+    var url = this.buildUrl(pageName, {
+      'id' : id
+    }, objectName);
+    this.navToSubPage(url, pageName);
+  },
+
+  requeryListPage : function() {
+	if(js.get_pop_dialog_id()){
+		js.invoke_pop_dialog_ok();
+	  return;
+	}
+	  
+    var listBizId = this.getPersistParam("$list_" + this.options.objectName);
+    var o = this;
+    if (listBizId) {
+      o = this.copy().replacePersistParam("$bizId", listBizId);
+    }
+    var url = o.buildUrl('pageList',{
+      objectEvent : 'Query',
+      noRequery : 'false'
+    });
+    this.navToSubPage(url, 'pageList');
+  },
+
+  submitQueryAll : function() {
+    var url = this.buildUrl('pageList') + "&objectEvent=Query";
+    window.location = url;
+  },
+
+  callbackForQuery : function() {
+    this.gotoListPage();
+  },
+
+  buildCondition : function(frmId) {
+    if(window._container_onsync) window._container_onsync(frmId);
+    
+    var cond = js.query.buildCondition(frmId);
+    if (cond == null || !this.notEmptyConds)
+      return cond;
+    var i, n = this.notEmptyConds.length;
+    for (i = 0; i < n; i++) {
+      var cf = this.notEmptyConds[i];
+      if (cond.indexOf(' name="' + cf.name + '"') < 0) {
+        alert(js.string('std.please_select_condition') + '::' + (cf.showName || cf.name));
+        return null;
+      }
+    }
+    return cond;
+  },
+
+  submitQuerySql : function(frmId) {
+    var cond = this.buildCondition(frmId);
+    if (cond == null)
+      return false;
+    var frm = $(frmId);
+
+    var ajax = this.buildAjax().setObjectEvent('QuerySql');
+
+    if (cond)
+      ajax.addParam('condition', cond);
+    ajax.callRemote(this.callbackForQuery.bind(this));
+  },
+
+  submitQueryForm : function(frmId, objectEvent) {
+    var ajax = this.buildAjax().setObjectEvent(objectEvent || 'QuerySql').addForm(frmId);
+    ajax.callRemote(this.callbackForQuery.bind(this));
+  },
+
+  submitQuery : function(frmId) {
+    var cond = this.buildCondition(frmId);
+    if (cond == null)
+      return false;
+    var frm = $(frmId);
+
+    var ajax = this.buildAjax().setObjectEvent('Query');
+
+    if (cond)
+      ajax.addParam('condition', cond);
+    ajax.callRemote(this.callbackForQuery.bind(this));
+  },
+
+  submitQueryView : function(viewSelector, params, frmId) {
+    var cond = this.buildCondition(frmId);
+    if (cond == null)
+      return false;
+
+    params = Object.extend({
+      objectEvent : 'Query',
+      condition : cond
+    }, params || {});
+    var objectName = params.objectName;
+    delete params.objectName;
+    var ajax = this.buildTplViewAjax(viewSelector, objectName).setObjectEvent(null).addParamMap(params);
+    ajax.updateContent(viewSelector);
+  },
+
+  updateTplView : function(viewSelector, params) {
+    params = Object.extend({
+      objectEvent : 'ViewDetail'
+    }, params || {});
+    var objectName = params.objectName;
+    delete params.objectName;
+    var ajax = this.buildTplViewAjax(viewSelector, objectName).setObjectEvent(null).addParamMap(params);
+    ajax.updateContent(viewSelector);
+  },
+
+  getSelectedRows : function() {
+    var chks = $Name(this.options.pkField, 'listTable');
+    var ret = [];
+    var i, n = chks.length;
+    for (i = 0; i < n; i++) {
+      if (chks[i].checked)
+        ret.push(chks[i].parentNode.parentNode);
+    }
+    return ret;
+  },
+
+  rowRecoverRemoved : function(pkValue) {
+    if (!confirm(js.string('std.confirm_recover_removed')))
+      return;
+    this.callRecoverRemoved(pkValue, this.callbackForRecoverRemoved.bind(this));
+  },
+
+  listRecoverRemoved : function() {
+    if (!js.form.hasSelected(this.options.pkField, $(this.options.frmList))) {
+      alert(form_G.MSG_REMOVE_NO_SELECTION);
+      return false;
+    }
+    if (!confirm(js.string('std.confirm_recover_removed')))
+      return false;
+
+    var pkValue = js.form.getSelectedValues(this.options.pkField, $(this.options.frmList));
+    this.callRecoverRemoved(pkValue, this.callbackForRecoverRemoved.bind(this));
+    return true;
+  },
+
+  rowRemove : function(pkValue) {
+    if (!confirm(js.string('std.confirm_remove')))
+      return;
+
+    this.callRemoteRemove(pkValue, this.callbackForRemove.bind(this));
+  },
+
+  listRemove : function() {
+    if (!js.form.hasSelected(this.options.pkField, js.byId(this.options.frmList))) {
+      alert(form_G.MSG_REMOVE_NO_SELECTION);
+      return false;
+    }
+    if (!confirm(js.string('std.confirm_remove')))
+      return false;
+
+    var pkValue = js.form.getSelectedValues(this.options.pkField, js.byId(this.options.frmList));
+    this.callRemoteRemove(pkValue, this.callbackForRemove.bind(this));
+    return true;
+  },
+
+  hasListSelected : function() {
+    return js.form.hasSelected(this.options.pkField, $(this.options.frmList));
+  },
+
+  getListSelected : function() {
+    return js.form.getSelectedValues(this.options.pkField, $(this.options.frmList));
+  },
+
+  detailRemove : function(pkValue) {
+    if (!confirm(js.string('std.confirm_remove')))
+      return;
+
+    this.callRemoteRemove(pkValue, this.callbackForRemove.bind(this));
+  },
+
+  callRemoteRemove : function(pkValue, callbackFunc) {
+    if (!pkValue)
+      return;
+    if (!js.isArray(pkValue))
+      pkValue = [ pkValue ];
+
+    this.buildAjax().setObjectEvent('Remove').addParamList(this.options.pkField, pkValue).callRemote(callbackFunc);
+  },
+
+  callRecoverRemoved : function(pkValue, callbackFunc) {
+    if (!pkValue)
+      return;
+    if (!js.isArray(pkValue))
+      pkValue = [ pkValue ];
+
+    this.buildAjax().setObjectEvent('RecoverRemoved').addParamList(this.options.pkField, pkValue).callRemote(callbackFunc);
+  },
+
+  exportPager : function() {
+    var url = this.buildUrl('pageExport',{objectEvent : 'PreExport'});
+    js.win.dialog(url);
+  },
+
+  exportWml : function(pkValue, field) {
+    var args = {
+      objectEvent : 'Download',
+      _bizActionId : 'exportWml'
+    };
+    args[this.options.pkField] = pkValue;
+    var url = this.buildTopUrl('pageExportWml', args);
+    js.win.open(url);
+  },
+
+  configListFields : function(b) {
+    b = b || false;
+    var url = this.buildTopUrl(b ? 'pageConfigCheckboxListFields' : 'pageConfigListFields') + "&objectEvent=None";
+    js.win.dialog(url, [ this.gotoListPage.bind(this) ]);
+  },
+
+  exportQuery : function(queryId, eventArgs) {
+    var url = this.buildTopUrl('pageExportCsv', eventArgs) + "&" + $H({
+      objectEvent : 'Export',
+      'queryId' : queryId
+    }).toQueryString();
+    js.win.open(url);
+  },
+
+  importData : function() {
+    this.buildAjax().setUrl(js.CONTEXT_PATH + this.options['pageImport']).setObjectEvent('Import').addForm('frmImport').setTplPart('importResult').updateContent('content');
+  },
+
+  popImportWin : function(args) {
+    args = Object.extend({
+      objectEvent : 'PreImport'
+    }, args || {});
+    var url = this.buildTopUrl('pageImport', args);
+    js.win.dialog(url, [ this.refreshPage.bind(this) ]);
+  },
+
+  queryById : function(queryId) {
+    var url = this.buildUrl('pageList') + "&" + $H({
+      objectEvent : 'Query',
+      'queryId' : queryId
+    }).toQueryString();
+    window.location = url;
+  },
+
+  quickQuery : function(text) {
+    var url = this.buildUrl('pageList',{
+      objectEvent : 'Query',
+      'quickQuery' : text
+    });
+    window.location = url;
+  },
+
+  gotoAddPage : function(args) {
+    args = js.extend({
+      objectEvent : 'PreAdd'
+    }, args || {});
+    var url = this.buildUrl('pageAdd', args);
+    this.navToSubPage(url, 'pageAdd');
+  },
+
+  gotoViewPage : function(pkValue, moveToItem) {
+    if (this.options.viewBizFinderActionName) {
+      var thiz = this.copy();
+      this.buildAjax().setBizAction(this.options.viewBizFinderActionName).addParam(this.options.pkField, pkValue).callRemote(function(ret) {
+        if (ret && ret.params) {
+          thiz.options.rowParams = thiz.options.rowParams || {};
+          thiz.options.objectName = ret.params.objectName || thiz.options.objectName;
+          var p = {};
+          for ( var k in ret.params) {
+            if (k != 'objectName') {
+              p[k] = ret.params[k];
+            }
+          }
+          thiz.options.rowParams[pkValue] = thiz.options.rowParams[pkValue] || {};
+          Object.extend(thiz.options.rowParams[pkValue], p);
+          thiz.options.viewBizFinderActionName = null;
+          
+          thiz.gotoViewPage(pkValue, moveToItem);
+        }
+      });
+    } else {
+      	this.disableAlertWhenSwitchPage();
+      // fix processing bug in IE6
+      window.setTimeout(this.gotoViewPageImpl.bind(this, pkValue, moveToItem), 10);
+    }
+  },
+
+  gotoViewPageImpl : function(pkValue, moveToItem) {
+    var args = {
+      objectEvent : 'ViewDetail'
+    };
+    args[this.options.pkField] = pkValue;
+    js.extend(args, this.options.rowParams[pkValue] || {});
+
+    var url = this.buildUrl('pageView', args);
+    if (typeof (moveToItem) != 'undefined')
+      url += "&moveToItem=" + moveToItem;
+    this.navToSubPage(url, 'pageView');
+  },
+
+  gotoUpdatePage : function(pkValue, moveToItem, layoutName, listType) {
+    var args = {
+      objectEvent : 'PreUpdate'
+    };
+    args[this.options.pkField] = pkValue;
+
+    var url = this.buildUrl('pageUpdate',args);
+    if (typeof (moveToItem) != 'undefined' && moveToItem >= 0)
+      url += "&moveToItem=" + moveToItem;
+    if (layoutName)
+      url += "&_layoutName=" + layoutName;
+    if (listType)
+      url += "&_listType=" + listType;
+    this.navToSubPage(url, 'pageUpdate');
+  },
+
+  gotoBatchUpdatePage : function() {
+    var url = this.buildUrl('pageBatchUpdate') + "&" + $H({
+      objectEvent : 'Query',
+      noRequery : 'true'
+    }).toQueryString();
+    window.location = url;
+  },
+
+  fixPagerForBatchUpdate : function() {
+    if (window.pager_listTable) {
+      window.pager_listTable.allowSwitchPage = this.submitBatchUpdate.bind(this, {
+        sync : true,
+        cb : function() {
+        },
+        noRefresh : true,
+        noCheckSelected : true
+      });
+    }
+  },
+
+  submitBatchUpdate : function(vars) {
+    vars = vars || {};
+    if (!js.form.hasSelected(this.options.pkField, $(this.options.frmList))) {
+      if (vars.noCheckSelected)
+        return true;
+
+      alert(js.string('std.please_select_update_item'));
+      return false;
+    }
+
+    if (!this.validateBeforeBatchUpdate())
+      return false;
+
+    var pkValue = js.form.getSelectedValues(this.options.pkField, $(this.options.frmList));
+    var ajax = this.buildAjax().addParam('_bizActionId', vars.bizActionId || this.options.todoBizActionId || '').addParamsMap(vars.paramsMap).setObjectEvent('BatchUpdate').addTableWithValue('listTable', this.options.pkField, pkValue).addContainer('batchUpdateCard');
+
+    var me = this;
+    var f = function() {
+      if (vars.cb) {
+        vars.cb();
+      } else {
+        alert(js.string('std.save_ok'));
+      }
+      if (vars.shouldRefresh || (!vars.noRefresh && me.options.shouldRefreshAfterBatchUpdate))
+        me.refreshPage();
+    };
+
+    if (vars.sync == true) {
+      ajax.callRemote();
+      f();
+    } else {
+      ajax.callRemote(f);
+    }
+    return true;
+  },
+
+  gotoBatchAddPage : function() {
+    var url = this.buildUrl('pageBatchAdd') + "&objectEvent=PreAdd";
+    window.location = url;
+  },
+
+  onSubmitOk : function(returnValue) {
+    alert(js.string('std.submit_ok'));
+    this.alertWhenClose = false;
+    if (js.win.getDialogArgs() && js.win.getDialogArgs()[0]) {
+      js.win.getDialogArgs()[0](returnValue);
+      this.closeTopWin();
+    }
+  },
+
+  alertSubmitOk : function(shouldRefresh) {
+    alert(js.string('std.submit_ok'));
+    if (shouldRefresh)
+      this.refreshPage();
+  },
+
+  submitBatchAdd : function() {
+    if (!this.validateBeforeBatchAdd())
+      return false;
+
+    this.buildAjax().setObjectEvent('BatchAdd').addForm(this.options.frmAdd).callRemote(this.invokeAddCallback.bind(this));
+    return true;
+  },
+
+  submitPopBatchAdd : function() {
+    if (this.submitting)
+      return false;
+
+    this.submitting = true;
+    if (!this.validateBeforeBatchAdd()) {
+      this.submitting = false;
+      return false;
+    }
+
+    var ajax = this.buildAjax();
+    ajax.setObjectEvent('BatchAdd').addForm(this.options.frmAdd).setOnComplete(function() {
+      this.submitting = false
+    }.bind(this)).callRemote(this.onSubmitOk.bind(this));
+
+    if (!ajax.valid)
+      this.submitting = false;
+    // this.submitting = false;
+    return true;
+  },
+
+  submitBatchUpdateByMl : function(rowField) {
+    var mod = new js.Table('tblBatchList').getModification(modField);
+    if (mod.length <= 0) {
+      alert(js.string('std.no_data_change'));
+      return;
+    }
+    if (!js.validate.validContainer('tblBatchList'))
+      return;
+    this.buildAjax().setObjectEvent('BatchUpdateByMl').addParam('tableChange', JSON.stringify(mod)).callRemote(function() {
+      alert(js.string('std.update_ok'));
+    });
+  },
+
+  onresetAddForm : function() {
+    return js.form.onreset(this.options.frmAdd, this.options.keepAddFields);
+  },
+
+  onresetUpdateForm : function() {
+    return js.form.onreset(this.options.frmUpdate, this.options.keeyUpdateFields);
+  },
+
+  onreset : function(frm, keepFields) {
+    keepFields = keepFields || this.options.keepFields;
+    return js.form.onreset(frm, keepFields);
+  },
+
+  gotoMappingPage : function(pkValue, relation) {
+    var args = {
+      objectEvent : 'PreSetMapping',
+      'relation' : relation
+    };
+    args[this.options.pkField] = pkValue;
+
+    var url = this.buildUrl('pageMapping') + "&" + $H(args).toQueryString();
+    window.location = url;
+  },
+
+  gotoRelationPage : function(pkValue, relation, useTreeView) {
+    var args = {
+      objectEvent : 'ViewRelation',
+      'relation' : relation,
+      'useTreeView' : (useTreeView ? true : false)
+    };
+    args[this.options.pkField] = pkValue;
+
+    var url = this.buildUrl('pageRelation') + "&" + $H(args).toQueryString();
+    window.location = url;
+  },
+
+  openRelationWin : function(pkValue, relation, useTreeView, objectName) {
+    var args = {
+      objectEvent : 'ViewRelation',
+      'relation' : relation,
+      useTreeView : useTreeView ? true : false
+    };
+    args[this.options.pkField] = pkValue;
+    var url = this.buildUrl('pageRelation', args, objectName);
+    js.win.open(url);
+  },
+
+  openOneRelationWin : function(pkValue, relation, useTreeView, objectName) {
+    var args = {
+      objectEvent : 'ViewRelation',
+      'relation' : relation,
+      'useTreeView' : (useTreeView ? true : false)
+    };
+    args[this.options.pkField] = pkValue;
+    var url = this.buildUrl('pageOneRelation', args, objectName);
+    js.win.open(url);
+  },
+
+  gotoMorePage : function(pkValue) {
+    var args = {
+      objectEvent : 'ViewDetail'
+    };
+    args[this.options.pkField] = pkValue;
+
+    var url = this.buildUrl('pageMore') + "&" + $H(args).toQueryString();
+    js.win.open(url);
+  },
+
+  switchRelationObj : function(relationName, pkValue) {
+    this.buildAjax().setUrl(js.CONTEXT_PATH + this.options['pageMore']).setObjectEvent('ViewDetail').addParam('_relationName', relationName).addParam(this.options.pkField, pkValue).setTplPart('view_relations').updateContent('view_relations');
+  },
+
+  gotoTreeViewPage : function(pkValue) {
+    var args = {
+      objectEvent : 'ViewDetail'
+    };
+    args[this.options.pkField] = pkValue;
+
+    var url = this.buildUrl('pageTreeView') + "&" + $H(args).toQueryString();
+    window.location = url;
+  },
+
+  popViewNewlyAddPage : function() {
+    var objectName = this.options.objectName;
+    if (objectName.indexOf('$') > 0)
+      objectName = objectName.substring(0, objectName.indexOf('$'));
+    objectName += '$newlyAdd';
+    var url = this.buildTopUrl('pageViewNewlyAdd', null, objectName) + "&objectEvent=Query";
+    js.win.open(url);
+  },
+
+  moveNode : function(pkValue, oldLayerCode, objectName, refreshFrame) {
+    var ret = window.prompt(js.string("std.move_to"), oldLayerCode || '');
+    if (ret == oldLayerCode)
+      return;
+    if (ret) {
+      if (!js.validate.checkLayerCode(ret))
+        return;
+      this.buildAjax(objectName).setObjectEvent('MoveNode').addParam('srcId', pkValue).addParam('dstLayerCode', ret).setOnFailure(function(transport) {
+        js.alert('std.update_fail')
+      }).callRemote(function() {
+        if (refreshFrame && window.parent.leftFrame)
+          js.win.reload(window.parent.leftFrame);
+        js.win.reload(window);
+      });
+    }
+  },
+  submitUpdateMapping : function(pkValue, relation) {
+    this.buildAjax().setObjectEvent('SetRelation').addForm(this.options.frmMapping).addParam('relation', relation).setOnFailure(function(transport) {
+      js.alert('std.update_fail')
+    }).callRemote(this.gotoRelationPage.bind(this, pkValue, relation));
+  },
+
+  onSelectOne : function(pkValue, nameValue) {
+    window.top.ext[0](pkValue, nameValue);
+    this.closeTopWin();
+  },
+
+  onSelectMany : function() {
+    var ids = js.form.getSelectedIdsAndShowNames(this.options.pkField);
+    if (ids.length <= 0) {
+      js.alert('std.no_selected');
+      return;
+    }
+    ;
+    window.top.ext[0](ids);
+    window.setTimeout('window.top.close()', 1000);
+  },
+
+  onRowClick : function() {
+  },
+
+  checkGiveUpUpdate : function(evt) {
+    if (!this.alertWhenClose)
+      return;
+    if (!js.form.hasChanged(this.options.frmUpdate))
+      return;
+    try {
+      evt.returnValue = js.string("std.giveup_update");
+    } catch (e) {
+      // IE will throw exception if window.location is
+      // assigned ???
+    }
+    return js.string("std.giveup_update")
+  },
+
+  checkGiveUpAdd : function(evt) {
+    if (!this.alertWhenClose)
+      return;
+    if (!js.form.hasChanged(this.options.frmAdd))
+      return;
+    try {
+      evt.returnValue = js.string("std.giveup_update");
+    } catch (e) {
+      // IE will throw exception if window.location is
+      // assigned ???
+    }
+    return js.string("std.giveup_update");
+  },
+
+  checkLeavePage : function(evt) {
+    if (!this.alertWhenClose)
+      return;
+    if (!js.form.hasChanged(this.options.frmList))
+      return;
+    try {
+      evt.returnValue = ' ';
+    } catch (e) {
+      // IE will throw exception if window.location is
+      // assigned ???
+    }
+    return ' ';
+  },
+
+  refreshPage : function() {
+   this.disableAlertWhenSwitchPage();
+    window.setTimeout(function() {
+      window.location.replace(window.location);
+    }, 10);
+  },
+
+  loadTree : function(eventArgs) {
+    var ajax = new js.Ajax().setTplPart('tree');
+    if (eventArgs) {
+      ajax.setUrl(window.location.pathname).addParamMap(eventArgs);
+    } else {
+      ajax.setUrl(window.location.href);
+    }
+    ajax.updateContent('tree');
+  },
+  
+	loadTreeRoot:function(tree,node,callback){
+		  var params = {};
+	      return this.buildAjax()
+	      	  .setUrl('pageTreeRoot')
+	      	  .addParam(tree.options.eventArgs)
+	      	  .setObjectEvent(tree.options.loadRootObjectEvent||'QueryTree')
+	      	  .addParam(params)
+	      	  .callRemote(callback);
+	},
+	
+	loadTreeChildren:function(tree,node,callback){
+		var pkField =  tree.options.idField || this.options.pkField;
+		var params = {};
+		var parent = node.getParent();
+		if(parent){
+		  params['parent'] = parent.data[pkField];
+		}
+	    params[pkField] = node.data[pkField];
+		return this.buildAjax()
+			.setUrl('pageTreeChildren')
+			.setObjectEvent(tree.options.loadChildrenObjectEvent||'ViewDetail')
+			.addParam(params)
+			.addParam(tree.options.eventArgs)
+			.callRemote(callback);
+	},
+
+  invokeBizAction : function(vars) {
+    if (!vars.lookupObject)
+      return this._invokeBizAction(vars);
+
+    if (!vars.eventArgs)
+      vars.eventArgs = {};
+
+    this.popLookupWin(vars.lookupObject, vars.lookupParams, function(retValue) {
+      vars.eventArgs[vars.lookupVar] = retValue;
+      this._invokeBizAction.bind(this, vars).defer();
+    }.bind(this));
+  },
+
+  _invokeBizAction : function(vars) {
+    var selectAll = vars.selectAll ? true : false;
+    var frmId = vars.frmId;
+
+    if (vars.validateFunc) {
+      if (!vars.validateFunc(vars))
+        return;
+    }
+
+    if (vars.confirmMessage) {
+      if (!confirm(vars.confirmMessage))
+        return;
+    }
+
+    var callbackFunc = vars.callbackFunc;
+    if (!callbackFunc) {
+      callbackFunc = vars.jumpToList ? this.gotoListPage.bind(this) : this.refreshPage.bind(this);
+    }
+
+    if (frmId == 'frmList' && $(frmId)) {
+      if (!js.form.hasSelected(this.options.pkField, frmId)) {
+        alert(js.string('std.no_selected'));
+        return false;
+      }
+    }
+
+    if (vars.actionFunc)
+      return vars.actionFunc(vars);
+
+	var thiz = this;
+    if(vars.objectName && vars.objectName != thiz.options.objectName){
+    	thiz = this.copy();
+	    var paramNameList = ['$relatedField','$relatedFieldValue'];
+	    thiz.removePersistParams(paramNameList);
+    }
+    
+    var ajax = thiz.buildAjax(vars.objectName, vars.eventArgs).setObjectEvent(vars.objectEvent || 'BizAction');
+    if (frmId)
+      ajax.addForm(frmId);
+
+    if (vars.multipleResult)
+      ajax.addParam('_multipleResult', vars.multipleResult);
+
+    if (vars.paramsMap)
+      ajax.addParamsMap(vars.paramsMap);
+    if (vars.paramMap)
+      ajax.addParamMap(vars.paramMap);
+
+    if (vars.buttonText)
+      ajax.addParam('_action_button_text', vars.buttonText);
+
+    ajax.addParam('_bizActionId', vars.bizActionId).addParam('_selectAll', selectAll);
+
+    if (vars.pkValue && vars.pkValue.each) {
+      ajax.addParamList('id', vars.pkValue);
+    } else {
+      ajax.addParam('id', vars.pkValue || '');
+    }
+    ajax.addProps(vars.propKeys).setOkMessage(vars.okMessage).callRemote(callbackFunc);
+  },
+
+  invokeBizActionCallback : function(vars, paramsMap) {
+    if (vars.actionVars)
+      vars = vars.actionVars;
+
+    vars.paramsMap = JSON.parse(JSON.stringify(paramsMap || {}));
+    this.invokeBizAction.bind(this, vars).defer();
+  },
+
+  onBizSelect : function(pkValue, bizActionId, paramName, paramValue) {
+    var params = {};
+    params[paramName] = paramValue;
+    return this.invokeBizAction({
+      bizActionId : bizActionId,
+      pkValue : pkValue,
+      paramMap : params
+    });
+  },
+
+  popBizActionWin : function(vars) {
+    var frmId = vars.frmId;
+    if (frmId) {
+      if (!js.validate.validForm(frmId))
+        return false;
+
+      if (frmId == 'frmList' && $(frmId)) {
+        if (!js.form.hasSelected(this.options.pkField, frmId)) {
+          alert(js.string('std.no_selected'));
+          return false;
+        }
+      }
+    }
+
+    var objectEvent = vars.objectEvent || 'BizAction';
+
+    var popEvent = (objectEvent == 'Add') ? 'PreAdd' : 'PreUpdate';
+
+    var args = Object.extend({}, vars.eventArgs || {});
+    args = Object.extend(args, {
+      objectEvent : popEvent,
+      _allowEmpty : true,
+      _todoAction : vars.bizActionId,
+      _todoEvent : objectEvent
+    });
+    
+    if(vars.pkValue)
+    	args[this.options.pkField] = vars.pkValue;
+    	
+    var thiz = this;
+    if(vars.objectName && vars.objectName != thiz.options.objectName){
+    	thiz = this.copy();
+	    var paramNameList = ['$relatedField','$relatedFieldValue'];
+	    thiz.removePersistParams(paramNameList);
+    }
+
+    var url = thiz.buildTopUrl('/_tpl/biz/biz_action.jsp?', args, vars.objectName);
+
+    js.win.dialog(url, [ this.invokeBizActionCallback.bind(this, vars) ]);
+  },
+
+  loadOptions : function(fldName, objectName, selected, eventArgs) {
+    var select = this.getFieldElement(fldName);
+    var ctl = new js.model.html.Select(select, {
+      firstText : '==' + js.string('std.please_select') + '=='
+    });
+    var url = this.buildTopUrl("pageListOptions", eventArgs, objectName);
+    ctl.dynamicLoad(url, selected);
+  },
+
+  buildSelectUrl : function(cfg) {
+    cfg = cfg || {};
+    var page = js.controlManager.pages[cfg.popUrl || ''];
+    page = page || this.options[cfg.popUrl];
+    page = page || cfg.popUrl;
+    var url = js.CONTEXT_PATH + page + "&objectName=" + cfg.objectName + "&UTF8Request=true";
+
+    if (cfg.relation)
+      url += "&relation=" + cfg.relation;
+    if (cfg.params) {
+      url += "&" + $H(cfg.params).toQueryString();
+    }
+    if (cfg.extArgs) {
+      url += "&" + cfg.extArgs;
+    }
+    if (cfg.rootId)
+      url += "&rootId=" + cfg.rootId;
+    if (url.indexOf('objectEvent=') < 0)
+      url += "&objectEvent=Query";
+    if (cfg.inheritPersist) {
+      var i, n = this.options.persistParams.length;
+      for (i = 0; i < n; i++) {
+        var ns = this.options.persistParams[i];
+        if (url.indexOf(ns[0] + '=') < 0 && url.indexOf(encodeURIComponent(ns[0]) + '=') < 0)
+          url += "&" + encodeURIComponent(ns[0]) + "=" + encodeURIComponent(ns[1]);
+      }
+    }
+    return url;
+  },
+
+  onSelectMultiForPref : function(selId, prefKey, value) {
+    var sel = $(selId);
+    js.select.setAllValueAndTextObjects(sel, value);
+    var data = value.findAll(function(r) {
+      return r.value != '';
+    });
+    this.buildAjax().setObjectName('PrefAction').setObjectEvent('SetPref').addParam('data', JSON.stringify(data)).addParam('prefKey', prefKey).callRemote();
+  },
+
+  popLookupWin : function(objectName, params, callbackFunc, cfg) {
+    cfg = cfg || {};
+    if (objectName)
+      cfg.objectName = objectName;
+    if (params)
+      cfg.params = params;
+    if (callbackFunc)
+      cfg.callbackFunc = callbackFunc;
+    if (!cfg.popUrl)
+      cfg.popUrl = 'pageLookup';
+
+    var url = this.buildSelectUrl(cfg);
+    if (url.indexOf('$ops') < 0)
+      url += "&$ops=s";
+
+    var f = cfg.winFeatures || "width=1000px,height=600px,status=no";
+    js.win.dialog(url, [ cfg.callbackFunc, cfg.getSelectedFunc ], f);
+  },
+
+  // sample :
+  // popSelectMultiWin({objectName:'Dept',relation:'users',popUrl:'byTree',callbackFunc:f})
+  popSelectMultiWin : function(cfg) {
+    cfg = cfg || {};
+    if (!cfg.popUrl)
+      cfg.popUrl = 'pageSelectMulti';
+
+    var url = this.buildSelectUrl(cfg);
+    if (url.indexOf('$ops') < 0)
+      url += "&$ops=S";
+    var f = cfg.winFeatures || "width=1000px,height=600px,status=no";
+    js.win.dialog(url, [ cfg.callbackFunc, cfg.getSelectedFunc ], f);
+  },
+
+  focusOnField : function(fldName, parent) {
+    var elm = this.getFieldElement(fldName, parent);
+    if (elm) {
+      try {
+        elm.focus();
+        if (elm.tagName == 'INPUT' && elm.type == 'text')
+          elm.select();
+      } catch (e) {
+      }
+    }
+  },
+
+  popLookupForRef : function(args) {
+    this.popLookupWin(args.objectName, args.lookupParams, function(refValue) {
+      window.setTimeout(this.updateRefFields.bind(this, args.fldName, args.objectName, refValue, args.noFldPrefix, null, args.parent, args), 10);
+      this._addNextRow(args);
+    }.bind(this));
+  },
+
+  loadRefAndMoveNext : function(args, evt) {
+    if (!args.fldName)
+      args.fldName = args.queryField;
+
+    var tr = js_batchListTable.getJsTable().getTrFromEvent(evt);
+    if (!tr)
+      return;
+
+    /*
+     * if(evt.keyCode == Event.KEY_UP){ var prevTr =
+     * js_batchListTable.getPrevRow(tr); if(prevTr)
+     * this.focusOnField(args.fldName,prevTr); return; }else if(evt.keyCode ==
+     * Event.KEY_DOWN){ var nextTr = js_batchListTable.getNextRow(tr,false);
+     * if(nextTr) this.focusOnField(args.fldName,nextTr); return; }
+     */
+
+    if (evt.keyCode != Event.KEY_RETURN) {
+      return;
+    }
+
+    args = Object.extend({
+      'objectEvent' : 'ViewFirst',
+      'refField' : 'queryValue'
+    }, args);
+
+    // Event.stop(evt);
+    var elm = Event.element(evt);
+    var value = elm.value;
+    if (args.minSize && (!value || value.length < args.minSize))
+      return;
+
+    this.updateRefFields(args.fldName, args.objectName, value, args.noFldPrefix, args, tr, args);
+    var nextTr = js_batchListTable.getNextRow(tr, true);
+    this.focusOnField(args.fldName, nextTr);
+  },
+
+  keyPressToLoadRefByCode : function(args, evt) {
+    if (evt.keyCode != Event.KEY_RETURN) {
+      return;
+    }
+    var elm = Event.element(evt);
+    var value = elm.value;
+    if (!value)
+      return;
+
+    if (args.minSize && (!value || value.length < args.minSize))
+      return;
+
+    args = Object.extend({}, args);
+    args.refValue = value;
+    args._addRow = args.autoAddRow;
+
+    if (window.js_batchListTable && args.autoAddRow) {
+      args._tr = js_batchListTable.getJsTable().getTrFromEvent(evt);
+    }
+
+    this.loadRefByCode(args);
+  },
+
+  loadRefByCode : function(args) {
+    // args: objectName, refField, refValue, fldName, parent
+    if (!args.fldName)
+      args.fldName = args.queryField;
+    if (!args.refValue)
+      return;
+    this.loadRefFields(args.objectName, args.refValue, this.onRefValuesByCode.bind(this, args), {
+      objectEvent : 'ViewFirst',
+      queryField : args.queryField || '',
+      refField : args.refField || 'queryValue'
+    });
+  },
+
+  onRefValuesByCode : function(args, refValues) {
+    if (!refValues) {
+      alert(args.msgMissingRecord || js.string('std.missing_record'));
+      if (args.onMissingRecord) {
+        this.args.onMissingRecord(args);
+      } else if (args.objectNameForAdd) {
+        var eventArgs = {};
+        eventArgs['$@' + args.queryField] = args.refValue;
+        this.popAddWin(this.loadRefByCode.bind(this, args).forDefer(), eventArgs, args.objectNameForAdd);
+      }
+      return;
+    }
+
+    if (refValues && (typeof refValues.hasMoreInstance != 'undefined' ? refValues.hasMoreInstance : refValues._hasMoreInstance)) {
+      args.lookupParams = Object.extend(args.lookupParams || {}, {
+        queryField : args.queryField || ''
+      });
+      args.lookupParams[args.refField || 'queryValue'] = args.refValue;
+      this.popLookupForRef(args);
+    } else {
+      this.setRefValues(args.fldName, refValues, args.parent);
+      if (args.onRefLoaded)
+        args.onRefLoaded(refValues, args);
+      this._addNextRow(args);
+    }
+  },
+
+  _addNextRow : function(args) {
+    if (args._addRow && window.js_batchListTable && args._tr) {
+      var tr = args._tr;
+      var nextTr = js_batchListTable.getNextRow(tr, true);
+      this.focusOnField(args.fldName, nextTr);
+    }
+  },
+
+  loadRefFields : function(objectName, refValue, callbackFunc, params) {
+    params = params || {};
+    var objectEvent = params.objectEvent || 'ViewDetail';
+    var refField = params.refField || 'id';
+
+    delete params.objectEvent;
+    delete params.refField;
+
+    var ajax = new js.Ajax();
+
+    if ($('ajax-loading-pane')) {
+      ajax.setLoadingPane(new js.ajax.InfoPane("ajax-loading-pane"));
+    } else {
+      ajax.setLoadingPane(this.options.loadingPane);
+    }
+
+    ajax.setUrl(js.CONTEXT_PATH + this.options["pageJsonRef"]).setObjectName(objectName).setObjectEvent(objectEvent).addParam("_allowEmpty", true).addParam(refField, refValue).addParamMap(params).callRemote(callbackFunc);
+  },
+
+  updateRefFields : function(fldName, objectName, refValue, noFldPrefix, params, parent, args) {
+    if (refValue && typeof (refValue) != 'string')
+      refValue = refValue.value;
+    if (!refValue)
+      return;
+
+    var f = function(refValues) {
+      this.setRefValues(noFldPrefix ? '' : fldName, refValues, parent)
+      if (args && args.onRefLoaded)
+        args.onRefLoaded(refValues, args);
+    }.bind(this);
+
+    if (this.loaders[fldName]) {
+      this.loaders[fldName](refValue, f, params);
+    } else {
+      this.loadRefFields(objectName, refValue, f, params);
+    }
+  },
+
+  setRefValues : function(fldName, refValues, parent) {
+    if (!refValues)
+      return;
+    for ( var fld in refValues) {
+      var refName = fldName ? (fldName + "." + fld) : fld;
+      this.setFieldValue(refName, refValues[fld], parent);
+    }
+  },
+
+  regRef : function(fldName, objectName, noFldPrefix, params, parent) {
+    var elm = this.getFieldElement(fldName, parent);
+    if (elm) {
+      js.regListener(elm, function(value) {
+        return this.updateRefFields(fldName, objectName, value, noFldPrefix, params, parent);
+      }.bind(this), parent);
+    }
+  },
+
+  regListener : function(fldName, callbackFunc, onInit, parent) {
+    var elm = this.getFieldElement(fldName, parent);
+    if (elm) {
+      js.regListener(elm, callbackFunc, onInit);
+    }
+  },
+
+  // deprecated
+  connectSelect : function(srcFldName, fldName, selectedId, objectName, relFldName, parent, allowEmptySource) {
+    var url = this.buildTopUrl('pageListOptions', null, objectName);
+    url += "&objectEvent=Query&queryField=" + (relFldName || srcFldName) + "&queryValue=";
+    var elm = this.getFieldElement(fldName, parent);
+    if (!elm || !elm.tagName == 'SELECT')
+      return;
+    new js.model.html.Select(this.getFieldElement(fldName, parent), {
+      firstText : "==" + js.string("std.please_select") + "==",
+      requestUrl : url,
+      selectedId : selectedId
+    }).connectWith(this.getFieldElement(srcFldName, parent), true, allowEmptySource);
+  },
+
+  bindSelect : function(args) {
+    var url = this.buildTopUrl('pageListOptions', Object.extend({
+      objectEvent : 'Query',
+      queryField : (args.relFldName || args.srcFldName)
+    }, args.eventArgs || {}), args.objectName) + "&queryValue=";
+
+    var elm = this.getFieldElement(args.fldName, parent);
+    if (!elm || !elm.tagName == 'SELECT')
+      return;
+
+    new js.model.html.Select(this.getFieldElement(args.fldName, parent), {
+      firstText : "==" + js.string("std.please_select") + "==",
+      requestUrl : url,
+      selectedId : args.selectedId
+    }).connectWith(this.getFieldElement(args.srcFldName, parent), true, args.allowEmptySource);
+  },
+
+  bindFieldset : function(fldName, fldValue, fieldsetId, onInit) {
+    this.regListener(fldName, function(value) {
+      if (value.indexOf('/') > 0 && fldValue.indexOf('/') < 0)
+        value = value.substring(value.indexOf('/') + 1);
+      this.showFieldset(fieldsetId, value == fldValue);
+    }.bind(stdPage), onInit);
+  },
+
+  addRenameFields : function(fields) {
+    this.renameFields = Object.extend(this.renameFields, fields || {});
+    return this;
+  },
+
+  regDynListener : function(elm, fld, varName, parent) {
+    elm = $(elm);
+    if (!elm)
+      return;
+    js.regListener(elm, function(value) {
+      var args = {};
+      if (value && (value.value !== undefined))
+        value = value.value;
+      args[varName] = value;
+      this.getField(fld, parent).updateDynamicArgs(args);
+    }.bind(this), true);
+  },
+
+  monitorFields : function(interval, params, parent) {
+    var objectName = params.objectName || this.options.objectName;
+    delete params.objectName;
+    params.objectEvent = params.objectEvent || 'BizAction';
+
+    var cb = function(ret) {
+      if (!ret)
+        return;
+      this.setRefValues(null, ret, parent);
+      if (ret._processing)
+        window.setTimeout(f, interval);
+    }.bind(this);
+    var f = function() {
+      var ajax = this.buildAjax().setObjectName(objectName).addParamMap(params);
+      ajax.setLoadingPane(new js.ajax.InfoPane('ajax-loading-pane'));
+      ajax.callRemote(cb);
+    }.bind(this);
+    window.setTimeout(f, interval);
+  },
+
+  connectDynArg : function(fldA, fldB, varName, parent) {
+    return this.regDynListener(this.getFieldElement(fldA, parent), fldB, varName);
+  },
+
+  regToggleFields : function(fldA, fldList, bInverse, onInit, parent) {
+    this.regListener(fldA, function(value) {
+      var v = bInverse ? 'N' : 'Y';
+      if (value == v) {
+        this.hideFields(fldList, parent);
+      } else {
+        this.showFields(fldList, parent);
+      }
+    }.bind(this), onInit, parent);
+  },
+
+  showFields : function(fldList, parent) {
+    fldList.each(function(fld) {
+      var ctl = this.getField(fld);
+      ctl.enableAndShow();
+    }.bind(this));
+  },
+
+  hideFields : function(fldList, parent) {
+    fldList.each(function(fld) {
+      var ctl = this.getField(fld);
+      ctl.disableAndHide();
+    }.bind(this));
+  },
+
+  getNumTableData : function(kFld, sFld, flds) {
+    // example: getNumTableData('sid','planId',[{name:'sl',
+    // showName:'shuliang'}])
+
+    var data = [];
+    var elms = flds.map(function(fld) {
+      return $Name(fld.name);
+    });
+    var n = elms[0].length;
+    var m = flds.length;
+    for ( var i = 0; i < n; i++) {
+      var row = {};
+      var nv = 0;
+      for ( var j = 0; j < m; j++) {
+        var elm = elms[j][i];
+        if (!row[kFld])
+          row[kFld] = elm.getAttribute('k') || '';
+        if (sFld)
+          row[sFld] = elm.getAttribute('s') || '';
+
+        var v = elm.value;
+        row[flds[j].name] = v;
+        if (v && !js.str.isFloat(v)) {
+          alert(flds[j].showName + "不是数字:" + v);
+          elm.focus();
+          elm.select();
+          return null;
+        }
+        if (v)
+          nv++;
+      }
+      if (nv == 0 && !row[kFld])
+        continue;
+
+      data.push(row);
+    }
+    return data;
+  },
+
+  getChk : function(row) {
+    return row.getElementsByTagName('input')[0];
+  },
+
+  getFieldValue : function(fldName, parent) {
+    var elm = this.getFieldElement(fldName, parent);
+    if (!elm)
+      return;
+    return js.getPostData(elm);
+  },
+
+  getField : function(fldName, parent) {
+    var elm = this.getFieldElement(fldName, parent);
+    if (!elm)
+      return;
+    return js.makeControl(elm);
+  },
+
+  getFieldDefaultValue : function(fldName, parent) {
+    return js.form.getElementDefaultValue(this.getFieldElement(fldName, parent));
+  },
+
+  getFieldElement : function(fldName, parent) {
+    fldName = this.renameFields[fldName] || fldName;
+    return (js.byName(fldName, parent)[0] || js.byField(fldName, parent));
+  },
+
+  getFieldTd : function(fldName, parent) {
+    fldName = this.renameFields[fldName] || fldName;
+    return ($Field(fldName, parent));
+  },
+
+  setFieldValue : function(fldName, fldValue, parent) {
+    var elm = this.getFieldElement(fldName, parent);
+    if(elm && elm.nodeType == 1 && elm.tagName == 'DIV' && elm.getAttribute('field')){
+    	//处理IE下$Name无法取到DIV的问题
+    	var divs = js.byTag('div',elm);
+    	for(var i = 0; i < divs.length; i++){
+    		var div = divs[i];
+    		if(div.getAttribute('name') == fldName){
+    			js.setWxValue(div, fldValue);
+    			return;
+    		}
+    	}
+    }
+    if (elm)
+      js.setWxValue(elm, fldValue);
+  },
+  
+  setFieldValues:function(values,parent){
+	  if(typeof(values) == 'string'){
+		  if(values && values.charAt(0) == '@'){
+			  values = values.substring(1);
+			  values = decodeURIComponent(values);
+		  }
+		  values = JSON.parse(values);
+	  }
+	  
+	  var is_array = function(value) {
+			return value &&
+		        typeof value === 'object' &&
+		        typeof value.length === 'number' &&
+		        typeof value.splice === 'function' &&
+		        !(value.propertyIsEnumerable('length'));
+		};
+	  
+	  for(var k in values){
+		  var val = values[k];
+		  this.setFieldValue(k,val,parent)
+		  if(val && is_array(val)){
+			  var els = $Name(k);
+			  var len = els ? (els.length > val.length ? val.length : els.length) : 0 ;
+			  for(var i = 0; i < len;i++){
+				  js.setWxValue(els[i+1],val[i]);// els[i+1] here is bug
+			  }
+		  }else{
+			  this.setFieldValue(k,val,parent);
+		  }
+	  }
+  },
+
+  getFieldset : function(id) {
+    return $(id);
+  },
+
+  showFieldset : function(id, visible) {
+    var elm = this.getFieldset(id);
+    if (!elm)
+      return;
+    if (visible)
+      js.show(elm);
+    else
+      js.hide(elm);
+  },
+
+  toggleAdvSearch : function(event) {
+    js.toggle('adv_search');
+    if (event)
+    	js.stopEvent(event);
+  },
+
+  serializeSubTable : function(elm, relationName) {
+    var o = $(elm);
+
+    if (!o || o.disabled)
+      return "";
+    if (!js.validate.validElement(o)) {
+      this.valid = false;
+      return "";
+    }
+    var data = table_to_json(elm);
+
+    var jsTbl = eval("js_" + o.id);
+
+    return '_cu_' + relationName + "=" + encodeURIComponent(JSON.stringify(data)) + '&_rm_' + relationName + "=" + encodeURIComponent(JSON.stringify(jsTbl.delIds));
+  },
+
+  toggleEntityMark : function(pkValue, imgId) {
+    var check = $(imgId).src.indexOf('on') != -1;
+    var path = check ? 'off' : 'on';
+    $(imgId).src = js.CONTEXT_PATH + '/_tpl/app/entity_mark/star_' + path + '.gif';
+    var value = null;
+    if (path == 'on') {
+      value = 'Y';
+    } else {
+      value = 'N';
+    }
+    this.buildAjax().setObjectEvent('UpdateMark').addParam(this.options.pkField, pkValue).addParam('value', value).callRemote(function() {
+    })
+  },
+
+  getCtl : function(id) {
+    return js.makeControl(id);
+  },
+
+  setProp : function(key, value) {
+    var ss = key.split('.');
+    var ctl = this.getCtl(ss[0]);
+    var i, n = ss.length;
+    for (i = 1; i < n - 1; i++) {
+      if (!ctl)
+        break;
+      ctl = ctl["get" + ss[i].camelize()] ? ctl["get" + ss[i].camelize()]() : ctl[ss[i]];
+    }
+    if (!ctl)
+      return;
+    if (n > 1) {
+      var v = ctl["get" + ss[n - 1].camelize()] ? ctl["get" + ss[n - 1].camelize()]() : ctl[ss[n - 1]];
+      if (v && v.setWxValue) {
+        v.setWxValue(value);
+        return null;
+      }
+      return ctl["set" + ss[n - 1].camelize()] ? ctl["set" + ss[n - 1].camelize()](value) : (ctl[ss[n - 1]] = value);
+    }
+    if (ctl.setWxValue)
+      return ctl.setWxValue(value);
+    ctl.value = value;
+  },
+
+  getProp : function(key) {
+    var ss = key.split('.');
+    var ctl = this.getCtl(ss[0]);
+    var i, n = ss.length;
+    for (i = 1; i < n; i++) {
+      if (!ctl)
+        break;
+      ctl = ctl["get" + ss[i].camelize()] ? ctl["get" + ss[i].camelize()]() : ctl[ss[i]];
+    }
+    if (!ctl)
+      return null;
+    if (ctl.getWxValue)
+      return ctl.getWxValue();
+    return ctl;
+  },
+
+  setProps : function(props) {
+    if (!props)
+      return;
+    for ( var key in props) {
+      if (typeof (key) == 'string') {
+        this.setProp(key, props[key]);
+      }
+    }
+  },
+
+  getProps : function(keys) {
+    if (!keys)
+      return null;
+    var props = {};
+    var i, n = keys.length;
+    for (i = 0; i < n; i++) {
+      var key = keys[i];
+      props[key] = this.getProp(key);
+    }
+    return props;
+  },
+
+  getRemoteResult : function(bizActionId, pkValue, params) {
+    return this.buildAjax().setBizAction(bizActionId).addParam(this.options.pkField, pkValue || '').addParamMap(params).callRemote();
+  },
+
+  isBatchUpdatePage : function() {
+    return this.options.pageList == this.options.pageBatchUpdate;
+  },
+
+  fetchRows : function(args, callbackFunc) {
+    args = Object.extend({
+      objectEvent : 'ViewDetail'
+    }, args || {});
+    var objectName = args.objectName;
+    if (this.isBatchUpdatePage())
+      args._batchUpdate = true;
+    delete args.objectName;
+    this.buildAjax(objectName, args).setLoadingPane(new js.ajax.InfoPane('ajax-loading-pane')).setUrl(js.CONTEXT_PATH + this.options.pageRows).setOnSuccess(function() {
+      if (this.isBatchUpdatePage())
+        js.form.selectAll(this.options.pkField);
+    }.bind(this)).request(callbackFunc);
+  },
+
+  fixForLookupList : function() {
+    this.options.pageList = '/_tpl/app/select_one/lookup_win.jsp?';
+  },
+
+  renderXls : function(pkValue, objectName) {
+    var url = this.buildUrl('pageRenderOut', {
+      id : pkValue,
+      'objectEvent' : 'BizAction',
+      _bizActionId : 'renderXls'
+    }, objectName);
+    js.win.open(url);
+  },
+
+  renderWml : function(pkValue, objectName) {
+    var url = this.buildUrl('pageRenderOut', {
+      id : pkValue,
+      'objectEvent' : 'BizAction',
+      _bizActionId : 'renderWml'
+    }, objectName);
+    js.win.open(url);
+  },
+
+  submitBuildReport : function(pkValue, fileField) {
+    var url = this.buildUrl('pageDownload', {
+      id : pkValue,
+      objectEvent : 'BizAction',
+      _bizActionId : 'buildReport',
+      fileField : fileField
+    });
+    js.win.open(url);
+  },
+
+  openRenderOutWin : function(params, objectName) {
+    if (!params.objectEvent)
+      params.objectEvent = 'BizAction';
+    var url = this.buildUrl('pageRenderOut', params, objectName);
+    js.win.open(url);
+  },
+
+  openListWin : function(objectName, flowType) {
+    var url;
+    if (flowType == 'staticflow' || flowType == 'freeflow') {
+      url = this.buildUrl('/std/df/top_tabs.jsp?', null, objectName)
+    } else {
+      url = this.buildUrl('pageList', {
+        objectEvent : 'Query'
+      }, objectName);
+    }
+    js.win.open(url);
+  },
+
+  openMetaEditor : function(metaName, editorObjectName) {
+    var url = this.buildTopUrl('/std/ide/meta_editor/meta_editor.jsp?', {
+      metaName : metaName
+    }, editorObjectName || 'MetaEditor');
+    js.win.open(url);
+  },
+
+  openFlexMetaEditor : function(metaName, editorObjectName) {
+    var url = this.buildTopUrl('/flex_swf/WxMetaEditor.html?', {
+      metaName : metaName
+    }, editorObjectName || 'MetaEditor');
+    js.win.open(url);
+  },
+
+  popRouteEditor : function(routeName, editorObjectName) {
+    var url = this.buildTopUrl('/std/wf/route/route_editor.jsp?pop=true&$staticRoute=true', {
+      routeName : routeName,
+      objectEvent : 'GetRouteTpl'
+    }, editorObjectName || 'WfRouteEditor');
+    js.win.dialogEx(url, [ this.refreshPage.bind(this) ], {
+      width : 800,
+      height : 600
+    });
+  },
+
+  popRouteEditorExt : function(routeName, editorObjectName, metaName) {
+    var url = this.buildTopUrl('/std/wf/route/route_editor_ext.jsp?pop=true&$staticRoute=true', {
+      'metaName' : metaName || '',
+      routeName : routeName,
+      objectEvent : 'GetRouteTplEx'
+    }, editorObjectName || 'WfRouteEditor');
+    js.win.dialogEx(url, [ this.refreshPage.bind(this) ], {
+      width : 800,
+      height : 600
+    });
+  },
+
+  openViewWin : function(objectName, pkValue, params, wName, options) {
+    var url = this.buildTopUrl('pageView', Object.extend({
+      id : pkValue,
+      objectEvent : 'ViewDetail'
+    }, params || {}), objectName);
+    return js.win.open(url, wName, options);
+  },
+
+  openListWinParam : function(objectName, params) {
+    var url = this.buildTopUrl('pageList', Object.extend({
+      objectEvent : 'Query'
+    }, params || {}), objectName);
+    return js.win.open(url);
+  },
+
+  openFcViewWin : function(objectName, pkValue, params) {
+    var url = this.buildTopUrl('pageView', Object.extend({
+      id : pkValue,
+      objectEvent : 'ViewDetail',
+      '$bizId' : 'fc'
+    }, params || {}), objectName);
+    return js.win.open(url);
+  },
+
+  openAddWin : function(objectName, params) {
+    var url = this.buildTopUrl('pageAdd', Object.extend({
+      objectEvent : 'PreAdd'
+    }, params || {}), objectName);
+    return js.win.open(url);
+  },
+
+  openPage : function(pageName, params, objectName) {
+    var url = this.buildTopUrl(pageName, params, objectName);
+    return js.win.open(url);
+  },
+
+  openFrame : function(selector, params) {
+    params = Object.extend({
+      objectEvent : 'None',
+      '_tplSelector' : selector
+    }, params || {});
+    var url = this.buildTopUrl('/std/entity/tpl_view.jsp?', params, 'FrameInfo');
+    return js.win.open(url);
+  },
+
+  openExportReport : function(rptName, params, objectName) {
+    params = Object.extend({
+      objectEvent : 'Report',
+      '$rptName' : rptName,
+      '$renderType' : 'xls'
+    },params || {});
+    
+    var frmId = params.frmId;
+    if (frmId == 'frmList' && $(frmId)) {
+      if (!js.form.hasSelected(this.options.pkField, frmId)) {
+        alert(js.string('std.no_selected'));
+        return false;
+      }else{
+      	params['pkValues'] = js.form.getSelectedValues(this.options.pkField,'frmList');
+      }
+    }
+    
+    return this.openPage(params.r == 'rpt_xls' ? '/std/entity/report_xls.jsp?' : 'pageRenderOut', params, objectName);
+  },
+
+  openPdfExportRpt : function(rptName, params, objectName) {
+    params = Object.extend(params || {}, {
+      objectEvent : 'Report',
+      '$rptName' : rptName,
+      '$renderType' : 'pdf'
+    });
+    return this.openPage('pageRenderOut', params, objectName);
+  },
+
+  openRenderHtml : function(rptName, params, objectName) {
+    params = Object.extend(params || {}, {
+      objectEvent : 'Report',
+      '$rptName' : rptName
+    });
+    return this.openPage('pageRenderHtml', params, objectName);
+  },
+
+  openReportHtml : function(rptName, params, objectName) {
+    params = Object.extend(params || {}, {
+      objectEvent : 'Report',
+      '$rptName' : rptName
+    });
+    return this.openPage('pageReportHtml', params, objectName);
+  },
+
+  popShowPage : function(selector, params, objectName) {
+    var url = this.buildShowUrl(selector, params, objectName)
+    js.win.dialog(url);
+  },
+
+  openShowPage : function(selector, params, objectName) {
+    var url = this.buildShowUrl(selector, params, objectName)
+    js.win.open(url);
+  },
+
+  gotoShowPage : function(selector, params, objectName) {
+    var url = this.buildShowUrl(selector, params, objectName);
+    window.location = url;
+  },
+
+  setContentWrapperStyle : function(style) {
+    var elm = $('contentWrapper');
+    if (elm)
+      elm.style = style;
+  },
+
+  fixPageDim : function() {
+    var w = $('contentWrapper');
+    if (!w)
+      return;
+  },
+
+  fetchViewPage : function(selector, elmId, pkValue) {
+    var url = '/std/entity/entity_view.jsp?';
+    if (selector)
+      url = '/std/entity/tpl_view.jsp?_tplSelector=' + selector;
+    this.buildAjax().setLoadingPane(new js.ajax.InfoPane('ajax-loading-pane')).setUrl(js.CONTEXT_PATH + url).setObjectEvent('ViewDetail').addParam(this.options.pkField, pkValue).updateContent(elmId);
+
+    return true;
+  },
+
+  expandAllViewPage : function() {
+    var sValues = js.form.getSelectedValues(this.options.pkField, $(this.options.frmList));
+    var i, n = sampleMethodIds.length;
+    for (i = 0; i < n; i++) {
+      var sValue = sValues[i];
+      this.buildAjax().setUrl(js.CONTEXT_PATH + "/std/entity/entity_view.jsp?").setObjectEvent('ViewDetail').addParam(this.options.pkField, sValue).updateContent();
+
+    }
+  },
+
+  changeEtlStrategy : function(value) {
+    if (!value)
+      return;
+    this.buildAjax().setUrl(js.CONTEXT_PATH + '/std/entity/render_template.jsp?').setBizAction('getEtlView').addParam('strategyFileName', value).setOnComplete(function() {
+      if (window._page_fix)
+        window._page_fix();
+    }).updateContent('divArgs');
+  },
+
+  filterEtlStrategySelect : function(selReason, selStrategy) {
+    selReason = $(selReason);
+    selStrategy = $(selStrategy);
+    if (!selStrategy)
+      return;
+
+    if (!this.strategyListData) {
+      this.strategyListData = js.select.getAllValueAndTextObjects(selStrategy);
+    }
+    var reasonValue = selReason.value;
+    var data = !reasonValue ? this.strategyListData : this.strategyListData.findAll(function(item) {
+      if (item.text.indexOf("：") < 0)
+        return true;
+      var s = item.text.split("：")[0];
+      var ary = s.split("-");
+      s = ary[ary.length - 1];
+      return (s == reasonValue);
+    });
+    js.select.setAllValueAndTextObjects(selStrategy, data);
+  },
+
+  submitEntityAddComment : function(pkValue) {
+    this.buildTplViewAjax('view_comment').setBizAction('entityAddComment').addParam(this.options.pkField, pkValue).addForm('frmAddComment').request(function(text) {
+      var div = document.createElement('div');
+      div.innerHTML = text;
+      var listNode = $('entity_comment_list');
+      listNode.appendChild(div);
+      var ipt = $('addCommentArea');
+      ipt.value = "";
+    });
+  },
+  popSlaveBatchSetWin : function(pkValue, relationName, layoutName, bUseSelected) {
+    var tbl = window["slave_" + relationName];
+    var sltIds = tbl.getSelectedPkValues();
+    if (bUseSelected) {
+      if (!sltIds || sltIds.length <= 0) {
+        alert(form_G.MSG_NO_SELECTION);
+        return false;
+      }
+    }
+    var cb = function(vars) {
+      var i;
+      for (i in vars) {
+        vars[i] = vars[i][0];
+      }
+      if (bUseSelected) {
+        tbl.buildAjax().setObjectEvent('BatchUpdate').addParamList("id", sltIds).addParamMap(vars).callRemote();
+      } else {
+        this.buildAjax().setBizAction('slaveBatchSet').addParam("_vars", JSON.stringify(vars)).addParam("id", pkValue).addParam('_relation', relationName).callRemote();
+      }
+      this.refreshSlavePage(tbl);
+    }.bind(this);
+    // table.js AjaxTable
+    var url = this.buildTopUrl('pageDialog', {
+      objectEvent : 'None',
+      '_layoutName' : layoutName
+    }, tbl.options.objectName);
+    js.win.dialog(url, [ cb ]);
+  },
+  downloadFile : function(params, objectName) {
+    params = Object.extend({
+      objectEvent : 'Download'
+    }, params || {});
+    var url = this.buildTopUrl('pageDownload', params, objectName);
+    return js.win.open(url);
+  },
+
+  openWebOfficeDoc : function(pkValue, fileField, fileName) {
+    var url = this.buildUrl('pageEditDoc', {
+      objectEvent : 'ViewDetail',
+      'id' : pkValue,
+      'fileField' : fileField,
+      'fileName' : fileName
+    });
+    js.win.open(url);
+  },
+
+  startMonitor : function(funcName, interval) {
+    var args = $A(arguments).slice(2);
+    var func = this[funcName];
+    var thiz = this;
+    var me = this.copy();
+    var f = function() {
+      thiz['timer_' + funcName] = window.setTimeout(function() {
+        func.apply(me, args);
+      }, interval);
+    }
+    var oldF = me.options.onSuccess;
+    me.options.onSuccess = function() {
+      if (oldF)
+        oldF();
+      f();
+    };
+    f();
+  },
+
+  stopMonitor : function(funcName) {
+    var t = this['timer_' + funcName];
+    if (t)
+      window.clearTimeout(t);
+  },
+
+  searchFullText : function(searchText, isSearchPath, self) {
+    if (!searchText)
+      return;
+
+    var url = this.buildUrl('pageFullTextSearch');
+    url += "&" + $H({
+      objectEvent : 'BizAction',
+      _bizActionId : 'searchFullText',
+      searchText : searchText,
+      isSearchPath : isSearchPath
+    }).toQueryString();
+    if (self) {
+      window.location = url;
+    } else {
+      js.win.open(url);
+    }
+  },
+  
+  compassSearch:function(searchText,args){
+  	args = Object.extend({objectEvent:'BizAction',
+  						  '_bizActionId':'fetchCompassSearch',
+  						  'searchText':searchText},args||{})
+  	var url = this.buildUrl('compassPage',args);
+  	js.win.open(url);
+  },
+
+  getNextDayValue : function(fldName) {
+    var v = this.getFieldValue(fldName);
+    var d = js.date.fromString(v);
+    d.moveNext();
+    return js.date.toFormatString(d, "yyyy-MM-dd");
+  },
+
+  getPrevDayValue : function(fldName) {
+    var v = this.getFieldValue(fldName);
+    var d = js.date.fromString(v);
+    d.movePrev();
+    return js.date.toFormatString(d, "yyyy-MM-dd");
+  },
+
+  /**
+   * 保存字段的附件到文件夹<br />
+   * path 要包含协议前缀：public | person | dept,如果不包含,则视为public
+   * 
+   */
+  saveFileToFolder : function(id, field, fileName, path, newName,objectName,override) {
+  	var objName = objectName || this.options.objectName;
+  	var params = {'field': field ,'path':path,'fileName':fileName,'newName':newName || '','override':override || false}
+    this.buildAjax()
+    	.setObjectName(objName)
+    	.setBizAction("saveAttToFolder")
+    	.addParam(this.options.pkField,id)
+    	.addParams(params)
+    	.callRemote(function(retValue){
+    	  if(!!retValue){
+    	     if(confirm('存在同名文件:\r\n'+retValue+'是否覆盖?')){
+	    	  this.saveFileToFolder(id,field,fileName,path,newName,objectName,true);
+    	     }
+    	  }else{
+    	    alert('保存成功!!');
+    	  }
+    	}.bind(this))
+  },
+
+  /**
+   * 批量保存所有附件到文件夹
+   */
+  saveAllFileToFolder : function(id, field, path,objectName) {
+    this.saveFileToFolder(id, field, '', path, '',objectName);
+  },
+  
+  editWebdavLink : function(sso,fileName,params) {
+    params = Object.extend({
+      objectEvent : 'Download'
+    }, params || {});
+    var url = this.buildUrl('pageDownload', params, this.options.objectName)+"&UTF8Request=true";
+    if(window.ActiveXObject){
+      var openDocObj = new ActiveXObject("SharePoint.OpenDocuments.2");
+      url = location.protocol + '//' + location.host + js.CONTEXT_PATH + '/dav/' + sso + fileName.substring(fileName.lastIndexOf('.'));
+      openDocObj.EditDocument(url);
+    }else{
+      var url = 'dochttp:' + '//' + location.host + js.CONTEXT_PATH + '/dav/' + sso + fileName.substring(fileName.lastIndexOf('.'));
+      window.location = url;
+    }
+    
+  },
+  
+  onlineOpen : function(vars){
+    vars = Object.extend({
+      edit : false,
+      revision : false
+    }, vars);
+    var url = vars.url;
+    var downloadUrl = url;
+    var postfixes = ['.doc','.xls','.ppt','.vsd','.docx','.xlsx','.pptx','.vsdx'];
+    var postfix;
+    if(vars.fileName){
+      postfix = vars.fileName.substring(vars.fileName.lastIndexOf('.'));
+    }else if(vars.url){
+      postfix = url.substring(url.lastIndexOf('.'));
+    }else{
+      alert('未指定文件名');
+      return;
+    }
+    if(!postfixes.include(postfix)){
+      js.win.open(downloadUrl);
+      return;
+    }
+    if(vars.idKey){
+      url = js.CONTEXT_PATH + '/dav/' + vars.idKey + postfix;
+      downloadUrl = downloadUrl || url;
+    }
+    var plugin = document.getElementById('officePlugin4chrome');
+    if(window.ActiveXObject){
+      var openDocObj; 
+      try{
+        openDocObj = new ActiveXObject("SharePoint.OpenDocuments.2");
+        url = location.protocol + '//' + location.host + url;
+        if(vars.edit){
+          openDocObj.EditDocument(url);          
+        }else{
+          openDocObj.ViewDocument(url);
+        }
+      }catch(e){
+        // 如果用户没有安装office套件就直接下载
+        js.win.open(downloadUrl);
+      }
+    }else if (plugin && plugin.downloadopen){
+      var result = plugin.downloadopen(
+        url,
+        url,
+        (vars.edit ? 'edit' : 'view'),
+        'revisionmode=' + (vars.revision ?  '1' : '0') + ',revisionuser=' + vars.revisionUser
+      );
+      if(result != 0){
+        alert('error code from chrome plugin:' + result);
+      }
+    }else{
+      js.win.open(downloadUrl);
+    }
+  },
+  
+  saveAllFilesToFolder:function(field,path,objectName){
+  	var fileName='';
+  	var newName='';
+  	var objName = objectName || this.options.objectName;
+  	if (!js.form.hasSelected(this.options.pkField, 'frmList')) {
+        alert(js.string('std.no_selected'));
+        return false;
+      }
+   this.buildAjax().setObjectName(objName).setBizAction("saveAttToFolder").addParamList(this.options.pkField, js.form.getSelectedValues(this.options.pkField, 'frmList')).addParam('field', field).addParam('path', path).addParam('fileName', fileName).addParam('newName', newName || '').callRemote(function() {alert('保存成功')})
+  },
+  unLockIp:function(ipAddr){
+	  this.buildAjax().setBizAction("unlockIp").addParam("ipAddr",ipAddr).callRemote(function() {alert('解锁成功')});
+  }
+});

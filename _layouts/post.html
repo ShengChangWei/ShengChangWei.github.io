@@ -1,0 +1,76 @@
+---
+layout: compress
+---
+<!DOCTYPE html>
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if (IE 7)&!(IEMobile)]><html class="no-js lt-ie9 lt-ie8"><![endif]-->
+<!--[if (IE 8)&!(IEMobile)]><html class="no-js lt-ie9"><![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"><!--<![endif]-->
+<head>
+    {% include head.html %}
+</head>
+<body>
+        {% include github-corner.html %}
+    {% include nav.html %}
+    <!-- Header -->
+    <header class="header" role="banner">
+        <div class="wrapper animated fadeIn">
+            <div class="content">
+                <div class="post-title {% if page.feature %} feature {% endif %}">
+                    <h1>{{ page.title }}</h1>
+                    <h4>{{ page.date | date_to_string }}</h4>
+                    {% if site.reading_time %}
+                    <p class="reading-time">
+                      <i class="fa fa-clock-o"></i>
+                      {% include read-time.html %}
+                    </p><!-- /.entry-reading-time -->
+                    <!-- 返回按钮 -->
+                    {% endif %}
+                    {% if page.project %}
+                    <a class="btn zoombtn" href="{{site.url}}/projects/">
+                    {% elsif page.javascript %}
+                    <a class="btn zoombtn" href="{{site.url}}/javascript/">
+                    {% elsif page.htmlCss %}
+                    <a class="btn zoombtn" href="{{site.url}}/html-css/">
+                    {% elsif page.interview %}
+                    <a class="btn zoombtn" href="{{site.url}}/interview/">
+                    {% elsif page.java %}
+                    <a class="btn zoombtn" href="{{site.url}}/java/">
+                    {% elsif page.vue %}
+                    <a class="btn zoombtn" href="{{site.url}}/vue/">
+                    {% elsif page.answerList %}
+                    <a class="btn zoombtn" href="{{site.url}}/answerList/">
+                    {% elsif page.nodejs %}
+                    <a class="btn zoombtn" href="{{site.url}}/nodejs/">
+                    {% elsif page.handWriting %}
+                    <a class="btn zoombtn" href="{{site.url}}/hand-writing/">
+                    {% elsif page.tools %}
+                    <a class="btn zoombtn" href="{{site.url}}/tools/">
+                    {% else %}
+                    <a class="btn zoombtn" href="{{site.url}}/posts/">
+                    {% endif %}
+                        <i class="fa fa-chevron-left"></i>
+                    </a>
+                </div>
+                {{ content }}
+                <div class="entry-meta">
+                {% include meta.html %}
+                </div>
+            </div>
+        </div>
+        {% if page.comments and site.disqus_shortname %}<section id="disqus_thread" class="animated fadeInUp">
+            {% include disqus_comments.html %}
+        </section><!-- /#disqus_thread -->{% endif %}
+    </header>
+    <script src="{{ site.url }}/assets/js/jquery-1.12.0.min.js"></script>
+    <script src="{{ site.url }}/assets/js/jquery.dlmenu.min.js"></script>
+    <script src="{{ site.url }}/assets/js/jquery.goup.min.js"></script>
+    <script src="{{ site.url }}/assets/js/jquery.magnific-popup.min.js"></script>
+    <script src="{{ site.url }}/assets/js/jquery.fitvid.min.js"></script>
+    <script src="{{ site.url }}/assets/js/scripts.js"></script>
+    {% if site.mathjax == true %}
+    <!-- MathJax -->
+    <script async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<!-- saved from url=(0095)http://10.165.122.59:8010/haidian2/sct/video/video_single_p.jsp?cameraCode=11010808001320008023 -->
+<html><head tpl:notag="true"><meta http-equiv="Content-Type" content="text/html; charset=GBK">
+<meta http-equiv="X-UA-Compatible" content="IE=8">
+
+<link href="./video_single_p_files/all.css" rel="stylesheet" type="text/css" charset="gbk"><script src="./video_single_p_files/jquery.all_wx.js.下载" charset="GBK"></script><script>//<![CDATA[
+
+    		$j.wx.persistParams = [];
+		
+//]]>
+</script>
+<link href="./video_single_p_files/video_control.css" type="text/css" rel="stylesheet" charset="GBK">
+<style type="text/css">
+    	html,body{margin:0; padding:0}
+    	#content{
+    		width:100%; height:100%;
+    		border-left:222px solid transparent;
+    	}
+    	
+    	object.video_frame {
+ 			float:left;
+    		width:960px;
+    		height:615px; 
+		}
+		
+		tr input{
+			border:0px;
+			margin:5px;
+			width:60px;
+			height:20px;
+		}
+    </style></head><body tpl:notag="true" style=";" class="" onload="if(window.debug_onload)window.debug_onload();" onbeforeunload=""><script src="./video_single_p_files/z_share.js.下载" charset="GBK"></script>
+<div id="ajax-submit-pane" class="dojoDialogx" style="position:absolute;display:none">
+<p style="text-align:center"><img src="./video_single_p_files/progressing.gif" border="0">
+<br> 正在处理...
+	</p></div><script src="./video_single_p_files/std.js.下载" charset="GBK"></script><script>//<![CDATA[
+
+      var stdPage = new js.StdPage(
+          {
+              objectName: '',
+              persistParams:[],
+              pkField:'',
+              cryptFields:null
+          }
+      );
+    
+//]]>
+</script>
+<table>
+<tbody>
+<tr>
+<td style="vertical-align:top; padding-top:5px;">
+<div id="frameContainer">
+<object id="g_PlayFrame1" class="video_frame" classid="clsid:2ACC923B-1125-4EA7-B93A-5F12BB452ED2" events="true" style="border: 1px solid white;" ondragover="vc.onCameraDragOver(event)" ondrop="vc.onCameraDrop(event)">
+            </object></div>
+<object classid="clsid:067A4418-EBAC-4394-BFBE-8C533BA6503A" id="h3c_IMOS_ActiveX" events="true" height="0" width="0"></object></td>
+<td style="vertical-align:top; padding-top:5px;">
+<table id="ctrl_pane" cellspacing="0" cellpadding="0">
+<tbody>
+<tr class="header">
+<td></td></tr>
+<tr class="ctrl_map">
+<td>
+<div><img border="0" src="./video_single_p_files/ptz_position.png" usemap="#Map">
+<map id="Map" name="Map">
+<area href="javascript:void(0)" onmousedown="vc.startPosUp();" onmouseup="vc.stopPosUp()" shape="rect" coords="36,5,63,21">
+<area href="javascript:void(0)" onmousedown="vc.startPosLeftUp();" onmouseup="vc.stopPosLeftUp()" shape="rect" coords="17,19,33,35">
+<area onmousedown="vc.startPosLeft();" onmouseup="vc.stopPosLeft()" href="javascript:void(0)" shape="rect" coords="6,40,22,65">
+<area onmousedown="vc.startPosLeftDown();" onmouseup="vc.stopPosLeftDown()" href="javascript:void(0)" shape="rect" coords="17,67,33,81">
+<area onmousedown="vc.startPosDown();" onmouseup="vc.stopPosDown()" href="javascript:void(0)" shape="rect" coords="39,79,63,95">
+<area onmousedown="vc.startPosRightDown();" onmouseup="vc.stopPosRightDown()" href="javascript:void(0)" shape="rect" coords="68,67,83,84">
+<area onmousedown="vc.startPosRightUp();" onmouseup="vc.stopPosRightUp()" href="javascript:void(0)" shape="rect" coords="68,17,83,32">
+<area onmousedown="vc.startPosRight();" onmouseup="vc.stopPosRight()" href="javascript:void(0)" shape="rect" coords="78,38,96,63">
+<area id="stop" href="javascript:void(0)" shape="rect" coords="38,38,65,65"></map></div></td></tr>
+<tr>
+<td>
+<input id="ctrl_add" type="button" onmousedown="vc.startZoomTele()" onmouseup="vc.stopZoomTele()">
+<input id="ctrl_minus" type="button" onmousedown="vc.startZoomWide()" onmouseup="vc.stopZoomWide()"></td></tr>
+<tr>
+<td>
+<input id="ctrl_zhupai" type="button" title="抓拍11010808001320008023" onclick="vc.snatchOnce()"></td></tr>
+<tr style="height:45px;"></tr>
+<tr class="footer">
+<td></td></tr></tbody></table></td></tr></tbody></table><script src="./video_single_p_files/video_control.js.下载" charset="GBK"></script><script>//<![CDATA[
+ 
+    var vc = new VideoControl({
+      userName : 'loadmin',
+      userPass : 'loadmin',
+      serverIp : '10.165.122.119',
+      frameControlIdList : [ 'g_PlayFrame1' ],
+      frameWidth :	700,
+      frameHeight:	580,
+      isDeptZhzx	:	true,
+      useEncoderForVideo	:	true
+    });
+   	
+    $j(function(){ 
+     	vc.login();
+    	Event.observe(window,'unload', vc.logout.bind(vc));               
+    	   
+    	document.onkeydown = vc.onCtrlKeyDown.bind(vc);
+    	document.onkeyup = vc.onCtrlKeyUp.bind(vc);      
+    	
+    	vc.options.cameraTypes[1] = 'IPC';
+
+    	vc.playCamera( 1, '11010808001320008023');
+    	vc.onVideoFrameClick(0);
+    
+    	vc.options.mapCamCodeToId['11010808001320008023'] = '5912811'; 
+    });
+  
+//]]>
+</script>
+</body></html>

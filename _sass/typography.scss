@@ -1,0 +1,342 @@
+// // content area
+// .content {
+// 	@include font-size(14);
+// 	padding: 0 2rem;
+// 	-moz-osx-font-smoothing: grayscale;
+// 	-webkit-font-smoothing: antialiased !important;
+// 	-moz-font-smoothing: antialiased !important;
+// 	text-rendering: optimizelegibility !important;
+// 	text-align: justify;
+// 	@media #{$small} {
+// 		padding: 0 .5em;
+// 	}
+// }
+
+// // titles
+// .title {
+// 	text-align: center;
+// 	font-weight: bold;
+// 	> p {
+// 		text-align: center;
+// 		font-weight: bold;
+// 	}
+// 	> a > p {
+// 		text-align: center;
+// 		font-weight: bold;
+// 	}
+// }
+// .post-title {
+// 	text-align: center;
+// 	font-weight: bold;
+// 	margin-bottom: 3rem;
+// }
+
+// // headings
+// h3.title a {
+// 	color: $color_shark;
+// 	text-decoration: none;
+// }
+
+// // post list
+// .post-list {
+//     text-align: left;
+// 	ul {
+// 		list-style: none;
+// 		padding-left: 0;
+// 	}
+// 	li {
+// 		padding: 10px 18px;
+// 		margin: 0 10px;
+// 		text-decoration: none;
+// 		background: $white;
+// 		color: $color_shark;
+// 		a {
+// 			@include font-rem(20);
+// 			text-decoration: none;
+// 			color: $color_shark;
+// 			font-weight: bolder;
+//             &:hover {
+//                 color: $red;
+//             }
+// 		}
+// 		p {
+// 			font-weight: lighter;
+// 			@include font-rem(16);
+// 		}
+// 	}
+// }
+
+// // quotes
+// blockquote {
+// 	font-family:$alt-font;
+// 	font-style:italic;
+// 	border-left:8px solid $color_tundora;
+// 	padding-left:20px;
+// 	margin: 0;
+// }
+// @media only screen and (min-width: 48em) {
+// 	blockquote {
+// 		margin-left:-28px
+// 	}
+// }
+
+// // figcaption
+// figcaption {
+//     padding-top: 10px;
+//     @include font(14);
+//     color: $color_stack;
+// }
+
+// // links
+// a {
+//   transition: color .4s;
+//   color: $color_shark;
+//   &:link {
+//   	color: $color_shark;
+//   }
+//   &:visited {
+//   	color: $color_tuatara;
+//   }
+//   &:hover {
+//   	color: $red;
+//   }
+//   &:active {
+//   	transition: color .3s;
+//   	color: $maroon;
+//   }
+// }
+
+// // pre and code
+// pre, code {
+// 	font-family: $font2;
+// 	overflow-x: auto;
+// }
+// p code,
+// li code,
+// p pre,
+// li pre {
+//     @include font(14);
+//     background-color: $color_gray;
+//     border: 1px solid $color_mischka;
+//     @include rounded(4px);
+//     margin: 0 2px;
+//     padding: 0 5px;
+// }
+// li .highlight code,
+// li .highlight pre {
+//     background-color: transparent;
+//     border: 0;
+// }
+
+// // table
+// table {
+// 	width: 100%;
+// }
+
+// // notice
+// .notice {
+//     margin-top: 1.5em;
+//     padding: .5em 1em;
+//     text-indent: 0;
+//     @include font-rem(14);
+//     background-color: $color_gray;
+//     border: 1px solid $color_pink_swan;
+//     @include rounded(3px);
+// }
+
+// // description title
+// dt {
+//     font-weight: bolder;
+// }
+
+// content area
+.content {
+	@include font-size(14);
+	padding: 0 2rem;
+	-moz-osx-font-smoothing: grayscale;
+	-webkit-font-smoothing: antialiased !important;
+	-moz-font-smoothing: antialiased !important;
+	text-rendering: optimizelegibility !important;
+	text-align: justify;
+	@media #{$small} {
+		padding: 0 .5em;
+	}
+}
+
+// titles
+.title {
+	text-align: center;
+	font-weight: bold;
+	> p {
+		text-align: center;
+		font-weight: bold;
+	}
+	> a > p {
+		text-align: center;
+		font-weight: bold;
+	}
+}
+.post-title {
+	text-align: center;
+	font-weight: bold;
+	margin-bottom: 3rem;
+}
+
+// headings
+h3.title a {
+	color: $color_shark;
+	text-decoration: none;
+}
+
+// post list
+.post-list {
+    text-align: left;
+	ul {
+		list-style: none;
+		padding-left: 0;
+	}
+	li {
+		padding: 10px 18px;
+		margin: 0 10px;
+		text-decoration: none;
+		background: $white;
+		color: $color_shark;
+		a {
+			@include font-rem(20);
+			text-decoration: none;
+			color: $color_shark;
+			font-weight: bolder;
+            &:hover {
+                color: $red;
+            }
+		}
+		p {
+			font-weight: lighter;
+			@include font-rem(16);
+		}
+	}
+}
+
+// quotes
+blockquote {
+	font-weight: 700;
+    border-left: 4px solid #59befa;
+    padding-left: 20px;
+	margin: 0;
+	color: #777;
+    background: rgba(107, 201, 226, 0.1);
+}
+@media only screen and (min-width: 48em) {
+	blockquote {
+		// margin-left:-28px
+	}
+}
+
+// figcaption
+figcaption {
+    padding-top: 10px;
+    @include font(14);
+    color: $color_stack;
+}
+
+// links
+a {
+  transition: color .4s;
+  color: $color_shark;
+  &:link {
+  	color: $color_shark;
+  }
+  &:visited {
+  	color: $color_tuatara;
+  }
+  &:hover {
+  	color: $red;
+  }
+  &:active {
+  	transition: color .3s;
+  	color: $maroon;
+  }
+}
+
+// pre and code
+pre, code {
+	font-family: $font2;
+	overflow-x: auto;
+}
+p code,
+li code,
+p pre,
+li pre {
+    @include font(14);
+    background-color: #f0f0f0;
+    // border: 1px solid $color_mischka;
+    @include rounded(4px);
+    margin: 0 2px;
+	padding: 0 5px;
+	color: red !important;
+}
+li .highlight code,
+li .highlight pre {
+    background-color: transparent;
+    border: 0;
+}
+
+// table
+table {
+	width: 100%;
+	word-break: initial;
+	border-collapse: collapse
+}
+
+table tr {
+    border-top: 1px solid #dfe2e5;
+    margin: 0;
+    padding: 0;
+}
+
+table tr:nth-child(2n),
+thead {
+    background-color: #fafafa;
+}
+
+table tr th {
+    font-weight: bold;
+    border: 1px solid #dfe2e5;
+    border-bottom: 0;
+    text-align: center;
+    margin: 0;
+    padding: 6px 13px;
+}
+
+table tr td {
+    border: 1px solid #dfe2e5;
+    text-align: center;
+    margin: 0;
+    padding: 6px 13px;
+}
+
+table tr th:first-child,
+table tr td:first-child {
+    margin-top: 0;
+}
+
+table tr th:last-child,
+table tr td:last-child {
+    margin-bottom: 0;
+}
+
+// notice
+.notice {
+    margin-top: 1.5em;
+    padding: .5em 1em;
+    text-indent: 0;
+    @include font-rem(14);
+    background-color: $color_gray;
+    border: 1px solid $color_pink_swan;
+    @include rounded(3px);
+}
+
+// description title
+dt {
+    font-weight: bolder;
+}
