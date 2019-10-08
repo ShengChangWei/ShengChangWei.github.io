@@ -13,7 +13,7 @@ comments: true
 
 > 基本使用方法
 
-<!-- ```javascript
+```javascript
 const promise = new Promise(function(resolve, reject) {
   // ... some code
   if (/* 异步操作成功 */){
@@ -120,5 +120,5 @@ promise.then((res) => {
 
 * [ECMAScript 6 入门](http://es6.ruanyifeng.com/)
 
-* [用JavaScript实现的算法和数据结构，附详细解释和刷题指南](https://github.com/ConardLi/awesome-coding-js) -->
+* [用JavaScript实现的算法和数据结构，附详细解释和刷题指南](https://github.com/ConardLi/awesome-coding-js)
 
