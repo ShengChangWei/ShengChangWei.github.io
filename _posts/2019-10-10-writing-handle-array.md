@@ -26,7 +26,7 @@ const unique=(array) => {
     })
 }
 
-unique([1,2,1,2,1,3,5,3,4,2,])
+unique([1,2,1,2,1,3,5,3,4,2])
 ```
 
 ### indexOf + filter
