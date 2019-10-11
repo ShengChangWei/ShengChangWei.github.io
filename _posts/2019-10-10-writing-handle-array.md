@@ -21,7 +21,9 @@ comments: true
 ```javascript
 const unique=(array) => {
     const obj = {}
-    return  array.filter((item, index) => {return obj.hasOwnProperty(item)? false : obj[item] = true})
+    return  array.filter((item, index) => {
+        return obj.hasOwnProperty(item)? false : obj[item] = true
+    })
 }
 
 unique([1,2,1,2,1,3,5,3,4,2,])
