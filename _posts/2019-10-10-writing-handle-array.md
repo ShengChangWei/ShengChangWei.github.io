@@ -57,13 +57,13 @@ unique([1,2,1,2,1,3,5,3,4,2,]);
 const unique = (array) => {
     array.sort((a, b) => a-b) ;
     //比较相邻
-    let pre = 0;
+    let prev = 0;
     let resultArray = []
     for(let i = 0; i<array.length; i++) {
-        if(!i || array[i] !== array[pre]) {
+        if(!i || array[i] !== array[prev]) {
             resultArray.push(array[i])
         }
-        pre = i;
+        prev = i;
     }
     return resultArray;
 }
@@ -102,14 +102,12 @@ const res = flat([1,2,[3,2],[2,3],2,6,3,[6,4]]);
 ### 使用reduce简化
 
 ```javascript
-function flatten(array) {
-    return array.reduce(
-    (prev, cur) =>
-        Array.isArray(cur) ?
-        prev.concat(flatten(cur)) :
-        prev.concat(cur)
-    , [])
+const flat = (array) => {
+    return array.reduce((prev, cur) => {
+        return Array.isArray(cur)? prev.concat(flat(cur)) : prev.concat(cur);
+    }, [])
 }
+const res = flat([1,2,[3,2],[2,3],2,6,3,[6,4]]);
 ```
 
 扩展一下reduce用法
@@ -128,14 +126,12 @@ arr.reduce(function(prev,cur,index,arr){
 ### 根据指定深度扁平数组
 
 ```javascript
-function flattenByDeep(array, deep = 1) {
-    return array.reduce(
-    (prev, cur) =>
-        Array.isArray(cur) && deep > 1 ?
-        prev.concat(flattenByDeep(cur, deep - 1)) :
-        prev.concat(cur)
-    , [])
+const flat = (array, deep =1) => {
+    return array.reduce((prev, cur) => {
+        return Array.isArray(cur) && deep > 1? prev.concat(flat(cur, deep -1)) : prev.concat(cur);
+    }, [])
 }
+const res = flat([1,2,[3,2],[2,3, [9, 0, [10,11]]],2,6,3,[6,4]], 2);
 ```
 
 ## 三、最值
@@ -160,22 +156,26 @@ Math.max(...array);
 
 ```javascript
 Array.prototype.reduceToMap = function (handler) {
-    return this.reduce((target, current, index) => {
-        target.push(handler.call(this, current, index))
-        return target;
-    }, [])
-};
+    return this.reduce((prev, cur, index) => {
+        prev.push(handler.call(this, cur, index))
+        return prev;
+    },[])
+}
+const arr = [1,2,3,4,5]
+arr.reduceToMap((item, index) => {
+    console.log(item, index)
+})
 ```
 
 ## 五、使用reduce实现filter
 
 ```javascript
 Array.prototype.reduceToFilter = function (handler) {
-    return this.reduce((target, current, index) => {
-    if (handler.call(this, current, index)) {
-        target.push(current);
+    return this.reduce((prev, cur, index) => {
+    if (handler.call(this, cur, index)) {
+        prev.push(cur);
     }
-    return target;
+    return prev;
     }, [])
 };
 ```
