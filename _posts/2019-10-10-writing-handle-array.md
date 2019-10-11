@@ -35,7 +35,7 @@ indexOf 返回的是数组元素第一次出现的索引
 
 ```javascript
 const unique =(array) => array.filter((item, i ) => array.indexOf(item) === i);
-unique([1,2,1,2,1,3,5,3,4,2,]);
+unique([1,2,1,2,1,3,5,3,4,2]);
 ```
 
 ### set 
@@ -48,7 +48,7 @@ const unique = array => Array.from(new Set(array));
 // 第二种
 const unique = array => [...new Set(array)];
 
-unique([1,2,1,2,1,3,5,3,4,2,]);
+unique([1,2,1,2,1,3,5,3,4,2]);
 ```
 
 ### 排序去重
@@ -69,7 +69,7 @@ const unique = (array) => {
     }
     return resultArray;
 }
-const res =  unique([1,2,1,2,1,3,5,3,4,2,]);
+const res =  unique([1,2,1,2,1,3,5,3,4,2]);
 ```
 
 ### 扩展去掉数组中重复的元素，不保留重复的元素
@@ -79,7 +79,7 @@ const filterNonUnique = arr => arr.filter(i =>
   arr.indexOf(i) === arr.lastIndexOf(i)
 )
 
- filterNonUnique([1,2,1,2,1,3,5,3,4,2,]); // [5 , 4]
+ filterNonUnique([1,2,1,2,1,3,5,3,4,2]); // [5 , 4]
 ```
 
 ## 二、数组扁平化
