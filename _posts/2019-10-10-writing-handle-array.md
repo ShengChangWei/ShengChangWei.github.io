@@ -184,9 +184,9 @@ Array.prototype.reduceToFilter = function (handler) {
 
 
 
-学习参考：
+本文主要学习参考：
 
-非常感谢：[https://github.com/ConardLi/awesome-coding-js](https://github.com/ConardLi/awesome-coding-js)
+非常非常感谢：[https://github.com/ConardLi/awesome-coding-js](https://github.com/ConardLi/awesome-coding-js)
 
 
 
