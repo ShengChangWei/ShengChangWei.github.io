@@ -262,7 +262,7 @@ comments: true
     }
 ```
 
-# 本文借鉴博客： 
+# 本文学习： 
 
 * <a href="https://www.cnblogs.com/moqiutao/p/6408252.html">CSS3效果：5种预载动画效果</a>
 
