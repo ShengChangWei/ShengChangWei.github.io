@@ -22,11 +22,13 @@ comments: true
 * `background-image`: 过渡设置
 
 ```html
-<h1 class="one">one</h1>
-<h1 class="two">two</h1>
-<h1 class="three">three</h1>
-<h1 class="four">four</h1>
-<h1 class="five">five</h1>
+<div>
+    <h1 class="one">one</h1>
+    <h1 class="two">two</h1>
+    <h1 class="three">three</h1>
+    <h1 class="four">four</h1>
+    <h1 class="five">five</h1>
+<div>
 ```
 ```css
 div {
