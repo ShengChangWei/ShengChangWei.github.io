@@ -3,7 +3,7 @@ layout: post
 title:  "剑指offer--字符串"
 date:   2019-10-22
 excerpt: "剑指offer--字符串" 
-javascript: true
+offer: true
 tag:
 - 剑指offer
 comments: true
