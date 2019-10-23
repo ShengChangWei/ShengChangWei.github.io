@@ -57,8 +57,7 @@ function replaceSpace(str) {
 * 再将第一个字符与后面的那部分字符逐个交换
 
 ```javascript
-function Permutation(str)
-{
+function Permutation(str) {
     let res=[];
     if(str.length<=0) return res;
     arr=str.split("");//将字符串转化为字符数组
@@ -67,7 +66,7 @@ function Permutation(str)
     res.sort();
     return res;
 }
-function permutate(arr,index,res){
+function permutate(arr,index,res) {
     if(arr.length==index){
         let s="";
         for(let i=0;i<arr.length;i++){
@@ -90,15 +89,14 @@ function permutate(arr,index,res){
 也就是利用树去尝试不同的可能性，不断地去字符串数组里面拿一个字符出来拼接字符串，当字符串数组被拿空时，就把结果添加进结果数组里，然后回溯上一层。（通过往数组加回去字符以及拼接的字符串减少一个来回溯。）
 
 ```javascript
-function Permutation(str)
-{
+function Permutation(str) {
     let res=[],pStr="";
     if(str.length<=0) return res;
     arr=str.split("");//将字符串转化为字符数组
     res=permutate(arr,pStr,res);
     return res;
 }
-function permutate(arr,pStr,res){
+function permutate(arr,pStr,res) {
     if(arr.length==0){
         return res.push(pStr);
     }else{
