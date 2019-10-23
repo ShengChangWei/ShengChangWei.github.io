@@ -55,6 +55,7 @@ function replaceSpace(str) {
 * 把字符串分为两部分：第一部分为第一个字符，第二部分为第一个字符以后的字符串。
 * 然后接下来求后面那部分的全排列。
 * 再将第一个字符与后面的那部分字符逐个交换
+
 ```javascript
 function Permutation(str)
 {
