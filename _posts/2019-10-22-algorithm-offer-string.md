@@ -1,26 +1,76 @@
 ---
 layout: post
-title:  "剑指offer--字符串"
+title:  "简单算法--字符串"
 date:   2019-10-22
-excerpt: "剑指offer--字符串" 
+excerpt: "简单算法--leetCode--字符串" 
 algorithm: true
 tag:
-- 剑指offer
+- leetCode
 - 数据结构与算法
 comments: true
 ---
 
-# 字符串
+# 字符串（leetCode）
 
 ## 目录
 
-* [替换空格](#1替换空格2019-10-22)
-* [字符串全排序](#2字符串全排序2019-10-23)
+
+* [反转字符串中的单词](#1反转字符串中的单词III2019-10-24)
 
 
-## 1、替换空格（2019-10-22）
+
+## 1、反转字符串中的单词 III（2019-10-24）
 
 ### 题目描述
+
+给定一个字符串，你需要反转字符串中每个单词的字符顺序，同时仍保留空格和单词的初始顺序。
+
+`示例：`
+
+```shell
+输入: "Let's take LeetCode contest"
+输出: "s'teL ekat edoCteeL tsetnoc" 
+```
+
+`注意：` 在字符串中，每个单词由单个空格分隔，并且字符串中不会有任何额外的空格。
+
+```javascript
+/**
+ * @param {string} str
+ * @return {string}
+ */
+function reverseWords(str) {
+    return str.split(" ").map(item => {
+        return item.split('').reverse().join('')
+    }).join(" ")
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- ### 题目描述
 
 请实现一个函数，将一个字符串中的每个空格替换成“%20”。例如，当字符串为We Are Happy.则经过替换之后的字符串为We%20Are%20Happy。
 
@@ -115,6 +165,6 @@ function permutate(arr,pStr,res) {
     }
     return res;
 }
-```
+``` -->
 
 
