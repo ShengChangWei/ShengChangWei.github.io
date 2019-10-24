@@ -3,9 +3,10 @@ layout: post
 title:  "剑指offer--字符串"
 date:   2019-10-22
 excerpt: "剑指offer--字符串" 
-offer: true
+algorithm: true
 tag:
 - 剑指offer
+- 数据结构与算法
 comments: true
 ---
 
