@@ -17,8 +17,8 @@ comments: true
 
 ```css
 input {
-	width: 280px;
-	height: 30px;
+    width: 280px;
+    height: 30px;
 }
 input {
 	transition: all 0.3s ease-in-out;
