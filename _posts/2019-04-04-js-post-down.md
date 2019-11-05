@@ -3,7 +3,7 @@ layout: post
 title:  "post导出/下载文件"
 date:   2019-04-04
 excerpt: "post方式实现导出/下载文件"
-vue: true
+javascript: true
 tag:
 - vue
 comments: true
@@ -62,4 +62,4 @@ comments: true
         'url/xxxxxxx/' //接口地址
       );
 ```
-注意点：传给后端的参数不是json对象的形式，而是 `currentPage=2&pageSize=20`, 因此需要后端兄弟的配合
+注意点：传给后端的参数不是json对象的形式，而是 `currentPage=2&pageSize=20`, 因此需要后端的配合

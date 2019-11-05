@@ -3,7 +3,7 @@ layout: post
 title:  "vue官方文档记录"
 date:   2019-03-29
 excerpt: "认为有必要记录一下的知识"
-vue: true
+javascript: true
 tag:
 - vue
 comments: true

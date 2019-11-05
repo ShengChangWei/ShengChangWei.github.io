@@ -3,7 +3,7 @@ layout: post
 title:  "vue的生命周期"
 date:   2019-05-15
 excerpt: "vue的生命周期解析"
-vue: true
+javascript: true
 tag:
 - vue
 comments: true

@@ -3,22 +3,21 @@
   url: /html-css/
 - title: Javascript
   url: /javascript/
-- title: vue
-  url: /vue/
-- title: nodejs
-  url: /nodejs/
-- title: Java
-  url: /java/
+- title: 前端性能优化
+  url: /optimizing/
+- title: 原生实现专题
+  url: /hand-writing/
+- title: 数据结构与算法
+  url: /algorithm/
+# - title: Java
+#   url: /java/
 - title: Book
   url: /books/
 - title: 面试题
   url: /interview/
 - title: 前端工具
   url: /tools/
-- title: 原生实现专题
-  url: /hand-writing/
-- title: 数据结构与算法
-  url: /algorithm/
+
 # - title: 前端清单解答
 #   url: /answerList/
 - title: 随记

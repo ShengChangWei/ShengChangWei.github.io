@@ -10,7 +10,7 @@ layout: compress
     {% include head.html %}
 </head>
 <body>
-        {% include github-corner.html %}
+    {% include github-corner.html %}
     {% include nav.html %}
     <!-- Header -->
     <header class="header" role="banner">
@@ -24,7 +24,7 @@ layout: compress
                 </div>
                 <div class="post-list">
                     {% for post in site.posts %} 
-                        {% if post.nodejs %}
+                        {% if post.optimizing %}
                     <ul>
                         <li class="wow fadeInLeft" data-wow-duration="1.5s">
                             <a class="zoombtn" href="{{ site.url }}{{ post.url }}">{{ post.title }}</a>
