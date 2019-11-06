@@ -13,12 +13,12 @@ comments: true
 
 ## 目录
 
-* [webpack 的性能瓶颈](#webpack的性能瓶颈)
-* [webpack 优化方案](#webpack优化方案)
-    - [优化 Loader ](#优化Loader)
-    - [优化 Loader 的文件搜索范围](#优化Loader的文件搜索范围)
-    - [将 Babel 编译过的文件缓存起来](#将Babel编译过的文件缓存起来)
-    - [DllPlugin 打包第三方库](#DllPlugin打包第三方库)
+* [前言](#前言)
+* [webpack 的性能瓶颈](#webpack 的性能瓶颈)
+* [webpack 优化方案](#webpack 优化方案)
+    - [优化Loader](#优化Loader)
+    - [将Babel编译过的文件缓存起来](#将Babel编译过的文件缓存起来)
+    - [DllPlugin打包第三方库](#DllPlugin打包第三方库)
     - [HappyPack（并行打包）](#HappyPack（并行打包）)
     - [Tree Shaking（删除冗余代码）](#Tree Shaking（删除冗余代码）)
     - [按需加载](#按需加载)
