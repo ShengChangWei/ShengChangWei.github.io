@@ -18,8 +18,8 @@ comments: true
 * [webpack 优化方案](#webpack-优化方案)
     - [优化Loader](#优化loader)
     - [DllPlugin 打包第三方库](#dllplugin-打包第三方库)
-    - [HappyPack--并行打包](#happypack--并行打包)
-    - [Tree Shaking--删除冗余代码](#tree-shaking--删除冗余代码)
+    - [HappyPack 并行打包](#happypack-并行打包)
+    - [Tree Shaking 删除冗余代码](#tree-shaking-删除冗余代码)
     - [按需加载](#按需加载)
  
 ## 前言
@@ -137,7 +137,7 @@ module.exports = {
   ]
 ```
 
-### HappyPack--并行打包
+### HappyPack 并行打包
 
 受限于 Node 是单线程运行的，所以 Webpack 在打包的过程中也是单线程的，特别是在执行 Loader 的时候，长时间编译的任务很多，这样就会导致等待的情况。
 
@@ -165,7 +165,7 @@ plugins: [
 ]
 ```
 
-### Tree Shaking--删除冗余代码
+### Tree Shaking 删除冗余代码
 
 从 webpack2 开始，webpack 原生支持了 ES6 的模块系统，并基于此推出了 Tree-Shaking。webpack 官方是这样介绍它的：
 
