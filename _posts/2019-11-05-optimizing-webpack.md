@@ -5,7 +5,7 @@ date:   2019-11-05
 excerpt: "前端性能优化"
 optimizing: true
 tag:
-- 前端性能
+- 前端性能优化
 comments: true
 ---
 
@@ -171,7 +171,9 @@ plugins: [
 从 webpack2 开始，webpack 原生支持了 ES6 的模块系统，并基于此推出了 Tree-Shaking。webpack 官方是这样介绍它的：
 
 ```shell
-Tree shaking is a term commonly used in the JavaScript context for dead-code elimination, or more precisely, live-code import. It relies on ES2015 module import/export for the static structure of its module system.
+Tree shaking is a term commonly used in the JavaScript context for dead-code elimination, 
+or more precisely, live-code import. It relies on ES2015 module import/export for the static 
+structure of its module system.
 ```
 意思是基于 import/export 语法，Tree-Shaking 可以在编译的过程中获悉哪些模块并没有真正被使用，这些没用的代码，在最后打包的时候会被去除。
 
