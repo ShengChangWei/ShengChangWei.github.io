@@ -21,7 +21,7 @@ comments: true
     - [HappyPack 并行打包](#happypack-并行打包)
     - [Tree Shaking 删除冗余代码](#tree-shaking-删除冗余代码)
     - [按需加载](#按需加载)
-* [Gzip 压缩原理](gzip-压缩原理)
+* [Gzip 压缩原理](#gzip-压缩原理)
  
 ## 前言
 
