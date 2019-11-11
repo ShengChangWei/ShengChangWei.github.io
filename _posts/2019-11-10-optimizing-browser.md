@@ -256,5 +256,6 @@ Push Cache 是指 HTTP2 在 server push 阶段存在的缓存。
 
 参考文章：
 
-[前端性能优化原理与实践](https://juejin.im/book/5b936540f265da0a9624b04b)
-[彻底理解浏览器的缓存机制](https://juejin.im/entry/5ad86c16f265da505a77dca4)
+[前端性能优化原理与实践](https://juejin.im/book/5b936540f265da0a9624b04b);
+
+[彻底理解浏览器的缓存机制](https://juejin.im/entry/5ad86c16f265da505a77dca4);
