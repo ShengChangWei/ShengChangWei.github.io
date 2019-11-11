@@ -1,8 +1,8 @@
 ---
 layout: post
-title:  "webpack--前端性能优化与Gzip原理"
+title:  "前端性能优化--webpack与Gzip原理"
 date:   2019-11-05
-excerpt: "前端性能优化"
+excerpt: "webpack与Gzip原理"
 optimizing: true
 tag:
 - 前端性能优化

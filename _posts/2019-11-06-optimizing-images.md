@@ -1,8 +1,8 @@
 ---
 layout: post
-title:  "图片--前端性能优化与我想对你说"
+title:  "前端性能优化--图片与我想对你说"
 date:   2019-11-06
-excerpt: "图片--前端性能优化"
+excerpt: "图片"
 optimizing: true
 tag:
 - 前端性能优化
