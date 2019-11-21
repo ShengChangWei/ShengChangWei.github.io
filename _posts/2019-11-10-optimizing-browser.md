@@ -19,8 +19,8 @@ comments: true
   - [Service Worker Cache](#service-worker-cache)
   - [HTTP Cache](#http-cache)
   - [Push Cache](#push-cache)
-* 服务器缓存
-* HTML5缓存
+* [服务器缓存](#服务器缓存)
+* [HTML5缓存](#html5缓存)
    
 
 
@@ -397,3 +397,5 @@ transaction.onerror = function(event) {
 [前端性能优化原理与实践](https://juejin.im/book/5b936540f265da0a9624b04b);
 
 [彻底理解浏览器的缓存机制](https://juejin.im/entry/5ad86c16f265da505a77dca4);
+
+首屏渲染体验和 SEO 的优化方案 
