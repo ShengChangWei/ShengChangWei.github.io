@@ -3,7 +3,7 @@ layout: post
 title:  "《JavaScript设计模式与开发实践》-- 代理模式"
 date:   2019-08-06
 excerpt: "代理模式" 
-javascript: true
+model: true
 tag:
 - 设计模式
 comments: true

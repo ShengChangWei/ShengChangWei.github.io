@@ -3,7 +3,7 @@ layout: post
 title:  "《JavaScript设计模式与开发实践》-- 基础知识准备"
 date:   2019-07-27
 excerpt: "JavaScript设计模式与开发实践"
-javascript: true
+model: true
 tag:
 - javascript
 comments: true

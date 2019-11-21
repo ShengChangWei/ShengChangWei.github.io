@@ -3,6 +3,8 @@
   url: /html-css/
 - title: Javascript
   url: /javascript/
+- title: 设计模式
+  url: /model/
 - title: 前端性能优化
   url: /optimizing/
 - title: 原生实现专题
