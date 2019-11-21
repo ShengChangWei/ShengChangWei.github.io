@@ -151,7 +151,8 @@ HTTP 缓存是开发中最用的最多的，也是比较熟悉的缓存机制，
 设置Cache-Control
 
 ```javascript
-cache-control: max-age=51532000 // 该资源在 51532000 秒以内都是有效的，完美地规避了时间戳带来的潜在问题。
+// 该资源在 51532000 秒以内都是有效的，完美地规避了时间戳带来的潜在问题。
+cache-control: max-age=51532000
 ```
 Cache-Control 相对于 expires 更加准确，它的优先级也更高。当 Cache-Control 与 expires 同时出现时，我们以 Cache-Control 为准。
 
@@ -213,7 +214,7 @@ If-Modified-Since: Fri, 27 Oct 2017 06:35:57 GMT
 
 ###### Etag 
 
-Etag 和 Last-Modified 类似，当首次请求时，我们会在响应头里获取到一个最初的标识符字符串，举个🌰，它可以是这样的：
+Etag 和 Last-Modified 类似，当首次请求时，我们会在响应头里获取到一个最初的标识符字符串，举个例子，它可以是这样的：
 
 ```javascript
 ETag: W/"2a3b-1602480f459"
@@ -241,13 +242,150 @@ Push Cache 是指 HTTP2 在 server push 阶段存在的缓存。
 * Push Cache 是一种存在于会话阶段的缓存，当 session 终止时，缓存也随之释放。
 * 不同的页面只要共享了同一个 HTTP2 连接，那么它们就可以共享同一个 Push Cache。
 
-## 服务器缓存
+## 服务器缓存CDN
 
-待续……
+### CDN含义
+
+```shell
+CDN （Content Delivery Network，即内容分发网络）指的是一组分布在各个地区的服务器。
+这些服务器存储着数据的副本，因此服务器可以根据哪些服务器与用户距离最近，来满足数据的请求。 
+CDN 提供快速服务，较少受高流量影响。
+```
+
+### CDN的核心功能特写
+
+核心点：
+
+* 缓存--就是说我们把资源 copy 一份到 CDN 服务器上这个过程
+* 回源--就是说 CDN 发现自己没有这个资源（一般是缓存的数据过期了），转头向根服务器（或者它的上层服务器）去要这个资源的过程。
+
+### CDN作用
+
+* 存放静态资源，减少项目资源的体积
+* 提升请求的响应速度，节省响应时间
+* CDN 服务器的域名与项目域名分开，同一个域名下的请求会不分青红皂白地携带 Cookie，而静态资源往往并不需要 Cookie 携带什么认证信息。把静态资源和主页面置于不同的域名下，完美地避免了不必要的 Cookie 的出现！
+
+
 
 ## HTML5缓存
 
-待续……
+* Cookie (不是H5新增)
+* Local Storage
+* Session Storage
+* IndexedDB
+
+说到H5缓存 Local Storage和Session Storage就不可避免的说到Cookie，三者经常在一起进行比较，本文也不脱俗，也将三者放在一起比较。
+
+
+### 三者作用
+
+* Cookie的作用是与服务器进行交互
+* Storage为了在本地存储数据而生
+
+### 三者区别
+
+类别 | 生命周期 | 存放数据大小 | 作用域 | 与服务器通信
+:-: | :-: | :-: | :-: | :-: |
+Cookie | 可设置生命周期，不设置关闭浏览器窗口，cookie就消失了 |  4KB | 遵循同源策略 | 参与服务器通信
+Local Storage | Local Storage 是持久化的本地存储，存储在其中的数据是永远不会过期的，使其消失的唯一办法是手动删除 | 5-10M | 遵循同源策略 | 不参与
+Session Storage | 而 Session Storage 是临时性的本地存储，它是会话级别的存储，当会话结束（页面被关闭）时，存储内容也随之被释放 | 5-10M |  遵循同源策略 Session Storage 特别的一点在于，即便是相同域名下的两个页面，只要它们不在同一个浏览器窗口中打开，那么它们的 Session Storage 内容便无法共享。| 不参与
+
+### 三者的关系
+
+HTTP 协议是一个无状态协议，服务器接收客户端的请求，返回一个响应，通信到此就结束了，而Cookie 的本职工作并非本地存储，而是“维持状态”。Cookie就是一个存储在浏览器里的一个小小的文本文件，同一个域名下的所有请求，都会携带 Cookie。它携带用户信息附着在 HTTP 请求上，在浏览器和服务器之间通信。当服务器检查 Cookie 的时候，便可以获取到客户端的状态。随着前端应用复杂度的提高，Cookie 也渐渐演化为了一个“存储多面手”——它不仅仅被用于维持状态，还被塞入了一些乱七八糟的其它信息，被迫承担起了本地存储的“重任”。为了弥补 Cookie 的局限性，让“专业的人做专业的事情”，Web Storage 出现了。
+
+
+### 三者应用场景
+
+#### Cookie
+
+（1）判断用户是否登录过网站，以便下次登录时能够实现自动登录（或者记住密码）。
+（2）保存上次登录的事件等信息。
+（3）保存上次查看的页面
+（4）浏览计数
+
+#### Local Storage
+
+（1）Local Storage 的特点之一是持久存储一些内容稳定的资源，如CSS、JS等静态资源
+（2）存储登录成功的token值，请求携带token与后端校验
+
+#### Session Storage
+
+（1）更适合用来存储生命周期和它同步的会话级别的信息。比如微博的 Session Storage 就主要是存储你本次会话的浏览足迹。
+
+具体的应用场景需要根据具体的业务去选择，可以从三个以下方面去考虑：
+
+* 是否与服务器通信
+* 存储的大小
+* 存储周期
+
+
+## IndexedDB
+
+IndexedDB 是一个运行在浏览器上的非关系型数据库。IndexedDB 是没有存储上限的（一般来说不会小于 250M）。它不仅可以存储字符串，还可以存储二进制数据。IndexedDB的作用就是在本地创建一个数据库，存储大量数据，可存储、添加、修改、删除数据等。
+
+通过一个基本的 IndexedDB 使用流程，旨在对 IndexedDB 形成一个感性的认知：
+
+1. 打开/创建一个 IndexedDB 数据库（当该数据库不存在时，open 方法会直接创建一个名为 xiaoceDB 新数据库）。
+
+```javascript
+// 后面的回调中，我们可以通过event.target.result拿到数据库实例
+let db
+// 参数1位数据库名，参数2为版本号
+const request = window.indexedDB.open("xiaoceDB", 1)
+// 使用IndexedDB失败时的监听函数
+request.onerror = function(event) {
+    console.log('无法使用IndexedDB')
+  }
+// 成功
+request.onsuccess  = function(event){
+  // 此处就可以获取到db实例
+  db = event.target.result
+  console.log("你打开了IndexedDB")
+}
+```
+
+2. 创建一个 object store（object store 对标到数据库中的“表”单位）。
+
+```javascript
+// onupgradeneeded事件会在初始化数据库/版本发生更新时被调用，我们在它的监听函数中创建object store
+request.onupgradeneeded = function(event){
+  let objectStore
+  // 如果同名表未被创建过，则新建test表
+  if (!db.objectStoreNames.contains('test')) {
+    objectStore = db.createObjectStore('test', { keyPath: 'id' })
+  }
+}  
+```
+
+3. 构建一个事务来执行一些数据库操作，像增加或提取数据等。
+
+```javascript
+// 创建事务，指定表格名称和读写权限
+const transaction = db.transaction(["test"],"readwrite")
+// 拿到Object Store对象
+const objectStore = transaction.objectStore("test")
+// 向表格写入数据
+objectStore.add({id: 1, name: 'xiuyan'})
+```
+
+4. 通过监听正确类型的事件以等待操作完成。
+
+```javascript
+// 操作成功时的监听函数
+transaction.oncomplete = function(event) {
+  console.log("操作成功")
+}
+// 操作失败时的监听函数
+transaction.onerror = function(event) {
+  console.log("这里有一个Error")
+}
+```
+
+### 应用场景
+
+当我们需要存储大量数据，并需要对这些数据进行一些操作时，使用IndexedDB是非常有必要的。
+
 
 ## 小结
 
