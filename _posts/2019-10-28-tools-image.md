@@ -96,6 +96,15 @@ comments: true
 
 ![图片]({{ site.url }}/assets/img/tools/10.png)
 
+## 11、logosc
+
+介绍：免版权商用图库，中文搜索，聚合了国外几家优秀免版权图库，可以同步加载资源。免费不限次数下载。
+
+网站：[https://www.logosc.cn/so/](https://www.logosc.cn/so/)
+
+![图片]({{ site.url }}/assets/img/tools/11.jpg)
+
+
 
 主要来源：
 
