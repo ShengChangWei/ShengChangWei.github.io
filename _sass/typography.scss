@@ -161,6 +161,13 @@
 	@media #{$small} {
 		padding: 0 .5em;
 	}
+
+	h2::before {
+		content: "";
+	}
+	h2::after {
+		content: "";
+	}
 }
 
 // titles
