@@ -165,22 +165,22 @@
 	h2 {
 		background: #59befa;
     color: #fff;
-    display: inline-block;
+    // display: inline-block;
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
     font-size: 1.3em;
     padding: 0 6px;
-    border-bottom: 2px solid #59befa;
+    // border-bottom: 2px solid #59befa;
 	}
-	h2::after {
-		content: "";
-		display: block;
-		height: 2px;
-		background: #59befa;
-		position: absolute;
-		height: 2px;
-		width: 41%;
-	}
+	// h2::after {
+	// 	content: "";
+	// 	display: block;
+	// 	height: 2px;
+	// 	background: #59befa;
+	// 	position: absolute;
+	// 	height: 2px;
+	// 	width: 44.6rem;
+	// }
 }
 
 // titles
