@@ -162,11 +162,22 @@
 		padding: 0 .5em;
 	}
 
-	h2::before {
-		content: "";
+	h2 {
+		background: #59befa;
+		padding: 0 6px;
+		color: #fff;
+		display: inline-block;
+		border-top-left-radius: 5px;
+		border-top-right-radius: 5px;
+		font-size: 1.3em;
+
 	}
 	h2::after {
 		content: "";
+		display: block;
+		height: 2px;
+		background: #59befa;
+		width: 716%;
 	}
 }
 
